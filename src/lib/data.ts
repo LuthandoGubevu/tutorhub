@@ -1,10 +1,11 @@
+
 import type { Lesson, TutorAvailability } from '@/types';
 
 export const mathematicsLessons: Lesson[] = Array.from({ length: 10 }, (_, i) => ({
   id: `math-${i + 1}`,
   subject: 'Mathematics',
   title: `Mathematics Lesson ${i + 1}: Introduction to ${i % 2 === 0 ? 'Calculus' : 'Algebra'} Topic ${Math.floor(i/2) + 1}`,
-  videoUrl: i === 0 ? 'https://www.facebook.com/share/v/1AnPJEdBhj/' : 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Updated for math-1
+  videoUrl: i === 0 ? 'https://www.facebook.com/share/v/1AnPJEdBhj/' : 'https://www.youtube.com/embed/dQw4w9WgXcQ',
   richTextContent: `<p>This is a rich text explanation for Mathematics Lesson ${i + 1}.</p><p>We will explore <strong>key concepts</strong> and <em>examples</em>.</p><p>A common formula is \\(E = mc^2\\), or more simply for this lesson, consider \\( (a+b)^2 = a^2 + 2ab + b^2 \\).</p>`,
   question: `Solve for x:  2x + 5 = 11. What is the value of x?`,
   exampleSolution: `2x + 5 = 11\\n2x = 11 - 5\\n2x = 6\\nx = 3`,

@@ -24,6 +24,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isLoadingAuth && currentUser) {
       // If user is already logged in and auth is not loading, redirect
+      // AuthContext also handles redirection, this is a fallback for direct navigation to /login
       if (currentUser.role === 'tutor') {
         router.replace('/tutor-dashboard');
       } else {
@@ -37,8 +38,9 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await loginUser(email, password);
-      // Redirection will be handled by AuthContext's useEffect
-      toast({ title: "Login Successful", description: "Welcome back!" });
+      // If loginUser succeeds, onAuthStateChanged in AuthContext will handle
+      // role fetching and redirection.
+      toast({ title: "Processing Login", description: "Please wait..." });
     } catch (error: any) {
       console.error("Login page error:", error);
       let errorMessage = "Login failed. Please check your credentials.";
@@ -48,9 +50,11 @@ export default function LoginPage() {
         errorMessage = "Please enter a valid email address.";
       }
       toast({ title: "Login Error", description: errorMessage, variant: "destructive" });
+    } finally {
+      // Ensures the button is re-enabled if the user remains on the login page
+      // for any reason after the login attempt (e.g., network error during role fetch after auth success but before redirect).
       setIsSubmitting(false);
     }
-    // setIsSubmitting(false); // This will be set to false by onAuthStateChanged flow or error
   };
   
   if (isLoadingAuth) {
@@ -62,7 +66,7 @@ export default function LoginPage() {
     );
   }
   
-  // If user is already logged in (and not loading), they will be redirected by useEffect.
+  // If user is already logged in (and not loading), they will be redirected by useEffect or AuthContext.
   // This prevents flicker of the login form.
   if (currentUser) {
      return (
@@ -108,12 +112,12 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting || isLoadingAuth}>
-              {isSubmitting || isLoadingAuth ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+              {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
               Sign In
             </Button>
           </form>
           <p className="text-xs text-center text-muted-foreground mt-6">
-            This platform uses Firebase Authentication. Ensure your account is set up with the correct role.
+            This platform uses Firebase Authentication. Ensure your account is set up with the correct role in Firestore.
           </p>
         </CardContent>
       </Card>

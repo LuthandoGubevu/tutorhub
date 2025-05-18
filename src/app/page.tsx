@@ -18,7 +18,7 @@ export default function DashboardPage() {
       <div className="space-y-8">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-primary">Welcome to EduPrep Pro!</CardTitle>
+            <CardTitle className="text-3xl font-bold text-primary">Welcome to iKasi Tutoring Platform!</CardTitle>
             <CardDescription className="text-lg">Your personalized learning hub for Mathematics and Physics.</CardDescription>
           </CardHeader>
           <CardContent>

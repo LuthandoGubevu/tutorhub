@@ -15,8 +15,8 @@ interface StudentDataContextType {
 
 const StudentDataContext = createContext<StudentDataContextType | undefined>(undefined);
 
-const SUBMITTED_WORK_STORAGE_KEY = 'eduPrepPro_submittedWork';
-const BOOKINGS_STORAGE_KEY = 'eduPrepPro_bookings';
+const SUBMITTED_WORK_STORAGE_KEY = 'ikasiTutoring_submittedWork';
+const BOOKINGS_STORAGE_KEY = 'ikasiTutoring_bookings';
 
 export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [submittedWork, setSubmittedWork] = useState<SubmittedWork[]>(() => {

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'EduPrep Pro',
+  title: 'iKasi Tutoring Platform',
   description: 'Interactive learning platform for Mathematics and Physics.',
 };
 

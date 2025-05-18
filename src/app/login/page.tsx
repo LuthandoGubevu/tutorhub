@@ -42,7 +42,7 @@ export default function LoginPage() {
       // role fetching and redirection.
       toast({ title: "Processing Login", description: "Please wait..." });
     } catch (error: any) {
-      console.error("Login page error:", error);
+      // console.error("Login page error:", error); // Removed this line
       let errorMessage = "Login failed. Please check your credentials.";
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         errorMessage = "Invalid email or password.";

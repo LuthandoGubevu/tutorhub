@@ -42,49 +42,43 @@ export default function LandingPage() {
       icon: <BookOpen size={32} className="text-accent" />,
       title: "Interactive Lessons",
       description: "Engage with dynamic lessons featuring video content, rich text explanations, and hands-on math problems to solidify your understanding.",
-      imageSrc: "https://placehold.co/600x400.png",
+      imageSrc: "/feature-interactive.png",
       imageAlt: "Interactive online lessons",
-      dataAiHint: "education online learning"
     },
     {
       icon: <BarChartBig size={32} className="text-accent" />,
       title: "Answer Saving & Tracking",
       description: "Save your answers with timestamps and view past submissions. Track your progress through your personal, intuitive dashboard.",
-      imageSrc: "https://placehold.co/600x400.png",
+      imageSrc: "/feature-tracking.png",
       imageAlt: "Student progress dashboard",
-      dataAiHint: "dashboard analytics"
     },
     {
       icon: <CalendarCheck size={32} className="text-accent" />,
       title: "Easy Session Booking",
       description: "Need one-on-one help? Book tutoring sessions effortlessly via our integrated calendar interface with available tutors.",
-      imageSrc: "https://placehold.co/600x400.png",
+      imageSrc: "/feature-booking.png",
       imageAlt: "Calendar for booking sessions",
-      dataAiHint: "calendar schedule"
     },
     {
       icon: <Lightbulb size={32} className="text-accent" />,
       title: "AI-Powered Tutor Support",
       description: "Our AI analyzes student answers to provide tutors with insights, helping them pinpoint areas where you might be struggling.",
-      imageSrc: "https://placehold.co/600x400.png",
+      imageSrc: "/feature-ai-support.png",
       imageAlt: "AI brain providing support",
-      dataAiHint: "artificial intelligence brain"
     },
     {
       icon: <MessageSquare size={32} className="text-accent" />,
       title: "Valuable Feedback Loop",
       description: "Share your thoughts on lessons through short feedback forms. Your input helps us make iKasi Tutoring even better for everyone!",
-      imageSrc: "https://placehold.co/600x400.png",
+      imageSrc: "/feature-feedback.png",
       imageAlt: "Feedback and communication",
-      dataAiHint: "communication feedback"
     },
     {
       icon: <ShieldCheck size={32} className="text-accent" />,
       title: "Secure & Focused Learning",
       description: "A dedicated platform designed to help you excel in Mathematics and Physics without common online distractions.",
-      imageSrc: "https://placehold.co/600x400.png",
+      imageSrc: "/feature-secure.png",
       imageAlt: "Secure learning environment",
-      dataAiHint: "security shield"
     }
   ];
 
@@ -130,7 +124,6 @@ export default function LandingPage() {
                     <Image
                       src={feature.imageSrc}
                       alt={feature.imageAlt}
-                      data-ai-hint={feature.dataAiHint}
                       fill
                       style={{objectFit:"cover"}}
                       className="rounded-t-xl"

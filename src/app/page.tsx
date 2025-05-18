@@ -55,12 +55,11 @@ export default function LandingPage() {
             </Button>
             <div className="mt-16">
               <Image
-                src="https://placehold.co/1000x500.png"
+                src="/ikasi-tutoring-hero.png"
                 alt="iKasi Tutoring Platform Preview"
                 width={1000}
                 height={500}
                 className="rounded-xl shadow-2xl mx-auto border border-border"
-                data-ai-hint="education platform dashboard"
                 priority
               />
             </div>

@@ -27,9 +27,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <div className="p-6 flex items-center space-x-3 border-b border-sidebar-border">
           <Link href="/" className="flex items-center space-x-3 group">
             <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-              EP
+              iK
             </div>
-            <h1 className="text-xl font-semibold text-sidebar-foreground group-hover:text-sidebar-primary transition-colors">EduPrep Pro</h1>
+            <h1 className="text-xl font-semibold text-sidebar-foreground group-hover:text-sidebar-primary transition-colors">iKasi Tutoring</h1>
           </Link>
         </div>
         <ScrollArea className="flex-1">
@@ -50,7 +50,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </nav>
         </ScrollArea>
         <div className="p-4 border-t border-sidebar-border">
-          <p className="text-xs text-sidebar-foreground/70 text-center">© {new Date().getFullYear()} EduPrep Pro</p>
+          <p className="text-xs text-sidebar-foreground/70 text-center">© {new Date().getFullYear()} iKasi Tutoring</p>
         </div>
       </aside>
       <main className="flex-1 p-6 lg:p-8 overflow-auto">

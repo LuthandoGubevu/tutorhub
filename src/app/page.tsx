@@ -10,9 +10,9 @@ const LandingHeader = () => (
     <div className="container mx-auto flex justify-between items-center">
       <Link href="/" className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xl shadow-md">
-            EP
+            iK
         </div>
-        <span className="text-2xl font-bold text-foreground">EduPrep Pro</span>
+        <span className="text-2xl font-bold text-foreground">iKasi Tutoring</span>
       </Link>
       <nav className="space-x-2">
         <Button asChild variant="ghost" className="text-foreground hover:bg-accent/10">
@@ -30,7 +30,7 @@ const LandingHeader = () => (
 const LandingFooter = () => (
   <footer className="py-10 bg-muted/50 text-muted-foreground text-center border-t border-border">
     <div className="container mx-auto">
-      <p className="font-semibold">&copy; {new Date().getFullYear()} EduPrep Pro.</p>
+      <p className="font-semibold">&copy; {new Date().getFullYear()} iKasi Tutoring.</p>
       <p className="text-sm mt-1">Empowering Students, One Lesson at a Time.</p>
     </div>
   </footer>
@@ -48,7 +48,7 @@ export default function LandingPage() {
               Unlock Your Academic Potential
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
-              EduPrep Pro is your personalized learning companion for Grade 12 Mathematics and Physics. Experience interactive lessons, AI-powered support, and seamless progress tracking.
+              iKasi Tutoring is your personalized learning companion for Grade 12 Mathematics and Physics. Experience interactive lessons, AI-powered support, and seamless progress tracking.
             </p>
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link href="/dashboard">Start Your Journey</Link>
@@ -56,7 +56,7 @@ export default function LandingPage() {
             <div className="mt-16">
               <Image
                 src="https://placehold.co/1000x500.png"
-                alt="EduPrep Pro Platform Preview"
+                alt="iKasi Tutoring Platform Preview"
                 width={1000}
                 height={500}
                 className="rounded-xl shadow-2xl mx-auto border border-border"
@@ -71,7 +71,7 @@ export default function LandingPage() {
         <section id="features" className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-primary">
-              Why Choose EduPrep Pro?
+              Why Choose iKasi Tutoring?
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
               {[
@@ -98,7 +98,7 @@ export default function LandingPage() {
                 {
                   icon: <MessageSquare size={32} className="text-accent" />,
                   title: "Valuable Feedback Loop",
-                  description: "Share your thoughts on lessons through short feedback forms. Your input helps us make EduPrep Pro even better for everyone!"
+                  description: "Share your thoughts on lessons through short feedback forms. Your input helps us make iKasi Tutoring even better for everyone!"
                 },
                 {
                   icon: <ShieldCheck size={32} className="text-accent" />,
@@ -125,7 +125,7 @@ export default function LandingPage() {
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Elevate Your Learning?</h2>
             <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto">
-              Join EduPrep Pro today and take the first step towards mastering Mathematics and Physics. Your personalized dashboard awaits!
+              Join iKasi Tutoring today and take the first step towards mastering Mathematics and Physics. Your personalized dashboard awaits!
             </p>
             <Button asChild size="lg" variant="outline" className="bg-background/10 hover:bg-background/20 text-primary-foreground border-primary-foreground/50 hover:border-primary-foreground px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link href="/dashboard">Get Started Now</Link>

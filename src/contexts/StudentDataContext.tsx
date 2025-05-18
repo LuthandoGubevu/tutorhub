@@ -1,9 +1,10 @@
 
 "use client";
 
-import type { SubmittedWork, Booking } from '@/types';
+import type { SubmittedWork, Booking, Lesson } from '@/types';
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { mathematicsLessons, physicsLessons } from '@/lib/data'; // Import lessons for score mocking
 
 interface StudentDataContextType {
   submittedWork: SubmittedWork[];
@@ -15,14 +16,33 @@ interface StudentDataContextType {
 
 const StudentDataContext = createContext<StudentDataContextType | undefined>(undefined);
 
-const SUBMITTED_WORK_STORAGE_KEY = 'ikasiTutoring_submittedWork';
-const BOOKINGS_STORAGE_KEY = 'ikasiTutoring_bookings';
+const SUBMITTED_WORK_STORAGE_KEY = 'ikasiTutoring_submittedWork_v2'; // Updated key for new structure
+const BOOKINGS_STORAGE_KEY = 'ikasiTutoring_bookings_v2';
+
+// Helper to assign a mock score if work is reviewed
+const assignMockScoreIfNeeded = (work: SubmittedWork): SubmittedWork => {
+  if (work.status === 'Reviewed' && typeof work.score === 'undefined') {
+    // Assign a random score between 60 and 100 for reviewed items if no score exists
+    return { ...work, score: Math.floor(Math.random() * 41) + 60 };
+  }
+  return work;
+};
+
 
 export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [submittedWork, setSubmittedWork] = useState<SubmittedWork[]>(() => {
     if (typeof window !== 'undefined') {
       const storedWork = localStorage.getItem(SUBMITTED_WORK_STORAGE_KEY);
-      return storedWork ? JSON.parse(storedWork) : [];
+      if (storedWork) {
+        const parsedWork = JSON.parse(storedWork) as SubmittedWork[];
+        // Ensure lessons are correctly hydrated and scores are potentially assigned
+        return parsedWork.map(work => {
+          const lessonSet = work.lesson.subject === 'Mathematics' ? mathematicsLessons : physicsLessons;
+          const fullLesson = lessonSet.find(l => l.id === work.lesson.id) || work.lesson;
+          return assignMockScoreIfNeeded({ ...work, lesson: fullLesson });
+        });
+      }
+      return [];
     }
     return [];
   });
@@ -48,11 +68,18 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [bookings]);
 
   const addSubmittedWork = (work: SubmittedWork) => {
-    setSubmittedWork(prev => [work, ...prev]);
+    const workWithScore = assignMockScoreIfNeeded(work);
+    setSubmittedWork(prev => [workWithScore, ...prev.filter(p => p.id !== workWithScore.id)].sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
   };
 
   const updateSubmittedWork = (workId: string, updates: Partial<SubmittedWork>) => {
-    setSubmittedWork(prev => prev.map(work => work.id === workId ? {...work, ...updates} : work));
+    setSubmittedWork(prev => prev.map(work => {
+      if (work.id === workId) {
+        const updatedWork = { ...work, ...updates };
+        return assignMockScoreIfNeeded(updatedWork);
+      }
+      return work;
+    }));
   };
 
   const addBooking = (booking: Booking) => {

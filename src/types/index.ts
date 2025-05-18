@@ -3,27 +3,28 @@ export interface Lesson {
   id: string;
   subject: 'Mathematics' | 'Physics';
   title: string;
-  videoUrl?: string; 
-  richTextContent: string; 
-  question: string; 
-  exampleSolution?: string; 
+  videoUrl?: string;
+  richTextContent: string;
+  question: string;
+  exampleSolution?: string;
 }
 
 export interface StudentAnswer {
   lessonId: string;
-  studentId: string; 
+  studentId: string;
   answer: string;
-  timestamp: string; 
+  timestamp: string;
 }
 
 export interface SubmittedWork {
-  id: string; 
+  id: string;
   lesson: Lesson;
   studentAnswer: string;
-  submittedAt: string; 
+  submittedAt: string;
   aiFeedbackSuggestion?: string;
   tutorFeedback?: string;
-  status: 'Pending' | 'Reviewed'; 
+  status: 'Pending' | 'Reviewed';
+  score?: number; // Optional: 0-100, for performance tracking
 }
 
 export interface Booking {
@@ -40,7 +41,7 @@ export interface Booking {
 export interface LessonFeedback {
   lessonId: string;
   studentId: string; // Mock
-  rating: number; 
+  rating: number;
   comments: string;
   timestamp: string;
 }

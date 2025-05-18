@@ -3,34 +3,76 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const { mockLogin, currentUser } = useAuth();
+  const { loginUser, currentUser, isLoadingAuth } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   useEffect(() => {
-    if (currentUser) {
-      // If user is already logged in, redirect to their respective dashboard
+    if (!isLoadingAuth && currentUser) {
+      // If user is already logged in and auth is not loading, redirect
       if (currentUser.role === 'tutor') {
         router.replace('/tutor-dashboard');
       } else {
         router.replace('/dashboard');
       }
     }
-  }, [currentUser, router]);
+  }, [currentUser, isLoadingAuth, router]);
 
-  const handleLoginAsStudent = () => {
-    mockLogin('student');
-    // router.push('/dashboard'); // AuthContext useEffect will handle redirect
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await loginUser(email, password);
+      // Redirection will be handled by AuthContext's useEffect
+      toast({ title: "Login Successful", description: "Welcome back!" });
+    } catch (error: any) {
+      console.error("Login page error:", error);
+      let errorMessage = "Login failed. Please check your credentials.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errorMessage = "Invalid email or password.";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Please enter a valid email address.";
+      }
+      toast({ title: "Login Error", description: errorMessage, variant: "destructive" });
+      setIsSubmitting(false);
+    }
+    // setIsSubmitting(false); // This will be set to false by onAuthStateChanged flow or error
   };
+  
+  if (isLoadingAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary to-accent p-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary-foreground" />
+        <p className="ml-4 text-lg text-primary-foreground">Loading...</p>
+      </div>
+    );
+  }
+  
+  // If user is already logged in (and not loading), they will be redirected by useEffect.
+  // This prevents flicker of the login form.
+  if (currentUser) {
+     return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary to-accent p-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary-foreground" />
+        <p className="ml-4 text-lg text-primary-foreground">Redirecting...</p>
+      </div>
+    );
+  }
 
-  const handleLoginAsTutor = () => {
-    mockLogin('tutor');
-    // router.push('/tutor-dashboard'); // AuthContext useEffect will handle redirect
-  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary to-accent p-4">
@@ -39,18 +81,39 @@ export default function LoginPage() {
           <CardTitle className="text-3xl font-bold">Welcome to iKasi Tutoring</CardTitle>
           <CardDescription className="text-md">Please sign in to continue</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* In a real app, replace these buttons with actual Firebase login UI */}
-          <div className="space-y-3">
-            <Button onClick={handleLoginAsStudent} className="w-full text-lg py-6 bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-              Sign In as Student (Mock)
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="you@example.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
+                disabled={isSubmitting}
+              />
+            </div>
+            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting || isLoadingAuth}>
+              {isSubmitting || isLoadingAuth ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+              Sign In
             </Button>
-            <Button onClick={handleLoginAsTutor} className="w-full text-lg py-6 bg-primary hover:bg-primary/90 text-primary-foreground">
-              Sign In as Tutor (Mock)
-            </Button>
-          </div>
-          <p className="text-xs text-center text-muted-foreground">
-            This is a simplified login for demonstration. A full implementation would use Firebase Authentication.
+          </form>
+          <p className="text-xs text-center text-muted-foreground mt-6">
+            This platform uses Firebase Authentication. Ensure your account is set up with the correct role.
           </p>
         </CardContent>
       </Card>

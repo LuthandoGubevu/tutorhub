@@ -1,106 +1,109 @@
 
 "use client";
 
-import type { User } from '@/types';
+import type { User as AuthUserType } from '@/types'; // Renamed to avoid conflict
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// TODO: Import Firebase app and auth here once Firebase is set up
-// import firebase from 'firebase/app'; // Or specific imports like getAuth, onAuthStateChanged
-// import 'firebase/auth';
-// import 'firebase/firestore'; // For fetching user role from Firestore
+import { auth, db } from '@/lib/firebase'; // Import Firebase instances
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User as FirebaseUserType } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: AuthUserType | null;
   userRole: 'student' | 'tutor' | null;
   isLoadingAuth: boolean;
-  // Add Firebase auth functions like signIn, signOut, signUp here
-  // For demonstration, we might add a mock login
-  mockLogin: (role: 'student' | 'tutor') => void;
-  mockLogout: () => void;
+  loginUser: (email: string, pass: string) => Promise<void>;
+  logoutUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUserType | null>(null);
   const [userRole, setUserRole] = useState<'student' | 'tutor' | null>(null);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true); // Start true until auth state is determined
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // TODO: Replace with Firebase onAuthStateChanged listener
-    // This is a placeholder to simulate auth state loading
-    const authCheckTimeout = setTimeout(() => {
-      // In a real app, Firebase onAuthStateChanged would call setIsLoadingAuth(false)
-      // and fetch user role from Firestore if a user is logged in.
-      // For now, we assume no user is logged in initially.
-      const storedUser = localStorage.getItem('ikasiTutoring_authUser');
-      if (storedUser) {
-        const parsedUser: User = JSON.parse(storedUser);
-        setCurrentUser(parsedUser);
-        setUserRole(parsedUser.role);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUserType | null) => {
+      if (firebaseUser) {
+        try {
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const userDataFromFirestore = userDoc.data() as { role: 'student' | 'tutor', displayName?: string }; // Define more clearly based on your Firestore structure
+            const appUser: AuthUserType = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: userDataFromFirestore.displayName || firebaseUser.displayName, // Prefer Firestore displayName
+              role: userDataFromFirestore.role,
+            };
+            setCurrentUser(appUser);
+            setUserRole(appUser.role);
+
+             // Redirect based on role after fetching
+            if (appUser.role === 'tutor') {
+              router.replace('/tutor-dashboard');
+            } else {
+              router.replace('/dashboard');
+            }
+
+          } else {
+            // Handle case where user exists in Auth but not Firestore (e.g., incomplete signup)
+            console.error("User document not found in Firestore for UID:", firebaseUser.uid);
+            setCurrentUser(null); // Or a minimal user object if preferred
+            setUserRole(null);
+            await signOut(auth); // Sign out user if their Firestore record is missing
+          }
+        } catch (error) {
+          console.error("Error fetching user role from Firestore:", error);
+          setCurrentUser(null);
+          setUserRole(null);
+          // Optionally sign out user if there's an error fetching critical role data
+          // await signOut(auth); 
+        }
+      } else {
+        // User is signed out
+        setCurrentUser(null);
+        setUserRole(null);
       }
       setIsLoadingAuth(false);
-    }, 1000); // Simulate loading delay
+    });
+    return () => unsubscribe(); // Cleanup subscription on unmount
+  }, [router]);
 
-    return () => clearTimeout(authCheckTimeout);
-
-    /*
-    // --- Example Firebase Integration ---
-    // const auth = getAuth(); // From firebase/auth
-    // const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-    //   if (firebaseUser) {
-    //     // User is signed in
-    //     // Fetch user role from Firestore
-    //     const userDocRef = firebase.firestore().collection('users').doc(firebaseUser.uid);
-    //     const userDoc = await userDocRef.get();
-    //     if (userDoc.exists) {
-    //       const userData = userDoc.data() as User; // Ensure User type matches Firestore structure
-    //       setCurrentUser({
-    //         uid: firebaseUser.uid,
-    //         email: firebaseUser.email,
-    //         displayName: firebaseUser.displayName,
-    //         role: userData.role,
-    //       });
-    //       setUserRole(userData.role);
-    //     } else {
-    //       // Handle case where user exists in Auth but not Firestore (e.g., incomplete signup)
-    //       setCurrentUser(null);
-    //       setUserRole(null);
-    //     }
-    //   } else {
-    //     // User is signed out
-    //     setCurrentUser(null);
-    //     setUserRole(null);
-    //   }
-    //   setIsLoadingAuth(false);
-    // });
-    // return () => unsubscribe(); // Cleanup subscription on unmount
-    */
-  }, []);
-
-  // Mock login/logout for demonstration without full Firebase setup
-  const mockLogin = (role: 'student' | 'tutor') => {
-    const mockUser: User = {
-      uid: `mock-${role}-${Date.now()}`,
-      email: `${role}@example.com`,
-      displayName: `${role.charAt(0).toUpperCase() + role.slice(1)} User`,
-      role: role,
-    };
-    setCurrentUser(mockUser);
-    setUserRole(role);
-    localStorage.setItem('ikasiTutoring_authUser', JSON.stringify(mockUser));
-    setIsLoadingAuth(false); // In case it was still true
+  const loginUser = async (email: string, pass: string) => {
+    setIsLoadingAuth(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      // onAuthStateChanged will handle setting user and role, and redirecting
+    } catch (error) {
+      setIsLoadingAuth(false);
+      console.error("Login failed:", error);
+      // Propagate error to UI if needed
+      throw error; 
+    }
   };
 
-  const mockLogout = () => {
-    setCurrentUser(null);
-    setUserRole(null);
-    localStorage.removeItem('ikasiTutoring_authUser');
+  const logoutUser = async () => {
+    setIsLoadingAuth(true);
+    try {
+      await signOut(auth);
+      // onAuthStateChanged will handle clearing user and role
+      setCurrentUser(null); // Explicitly clear state
+      setUserRole(null);
+      router.push('/login'); // Redirect to login after logout
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Even if logout fails, ensure local state is cleared and UI reflects loading finished
+    } finally {
+        setIsLoadingAuth(false);
+    }
   };
-
 
   return (
-    <AuthContext.Provider value={{ currentUser, userRole, isLoadingAuth, mockLogin, mockLogout }}>
+    <AuthContext.Provider value={{ currentUser, userRole, isLoadingAuth, loginUser, logoutUser }}>
       {children}
     </AuthContext.Provider>
   );

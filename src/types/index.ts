@@ -1,4 +1,12 @@
 
+export interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  role: 'student' | 'tutor' | null; // Role can be student, tutor, or null if not set/known
+  // Add other user-specific fields like profilePicture if needed
+}
+
 export interface Lesson {
   id: string;
   subject: 'Mathematics' | 'Physics';

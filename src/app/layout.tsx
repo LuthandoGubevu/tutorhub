@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'iKasi Tutoring Platform',
-  description: 'Interactive learning platform for Mathematics and Physics.',
+  title: 'EduPrep Pro - Personalized Learning Platform',
+  description: 'Interactive learning platform for Grade 12 Mathematics and Physics. AI-assisted tutoring, progress tracking, and session booking.',
 };
 
 export default function RootLayout({

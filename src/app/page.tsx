@@ -1,126 +1,139 @@
 
-"use client";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import { BookOpen, BarChartBig, CalendarCheck, Lightbulb, MessageSquare, ShieldCheck } from 'lucide-react';
 
-import AppLayout from '@/components/AppLayout';
-import { useStudentData } from '@/contexts/StudentDataContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { mathematicsLessons, physicsLessons } from '@/lib/data';
-import SubjectOverviewCard from '@/components/dashboard/SubjectOverviewCard';
-import AssignmentSummaryTable from '@/components/dashboard/AssignmentSummaryTable';
-import PerformanceChart from '@/components/dashboard/PerformanceChart';
-import AlertsPanel from '@/components/dashboard/AlertsPanel';
-import { Atom, Sigma, BarChart3, LayoutGrid, AlertCircle } from 'lucide-react';
-
-export default function DashboardPage() {
-  const { submittedWork, bookings } = useStudentData();
-
-  const allLessons = [...mathematicsLessons, ...physicsLessons];
-
-  const getSubjectData = (subject: 'Mathematics' | 'Physics') => {
-    const subjectLessons = subject === 'Mathematics' ? mathematicsLessons : physicsLessons;
-    const completed = submittedWork.filter(sw => sw.lesson.subject === subject).length;
-    return {
-      total: subjectLessons.length,
-      completed: completed,
-    };
-  };
-
-  const mathData = getSubjectData('Mathematics');
-  const physicsData = getSubjectData('Physics');
-
-  const totalLessons = mathData.total + physicsData.total;
-  const totalCompletedLessons = mathData.completed + physicsData.completed;
-  const overallCompletionPercentage = totalLessons > 0 ? Math.round((totalCompletedLessons / totalLessons) * 100) : 0;
-
-  return (
-    <AppLayout>
-      <div className="space-y-6">
-        <Card className="shadow-lg bg-gradient-to-r from-primary to-accent text-primary-foreground">
-          <CardHeader className="flex flex-row justify-between items-start p-6">
-            <div>
-              <CardTitle className="text-4xl font-bold">Dashboard</CardTitle>
-              <CardDescription className="text-lg text-primary-foreground/90 mt-1">
-                Track your progress, manage assignments, and view performance insights.
-              </CardDescription>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-primary-foreground/80">Overall Progress</p>
-              <p className="text-3xl font-bold text-primary-foreground">{overallCompletionPercentage}%</p>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Subject Overviews & Alerts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <SubjectOverviewCard
-              subjectName="Mathematics"
-              icon={<Sigma />}
-              totalLessons={mathData.total}
-              completedLessons={mathData.completed}
-            />
-            <SubjectOverviewCard
-              subjectName="Physics"
-              icon={<Atom />}
-              totalLessons={physicsData.total}
-              completedLessons={physicsData.completed}
-            />
-          </div>
-          <div className="lg:col-span-1">
-             <AlertsPanel bookings={bookings} allLessons={allLessons} submittedWork={submittedWork} />
-          </div>
+// Simple header component for landing page
+const LandingHeader = () => (
+  <header className="py-4 px-4 md:px-8 bg-background/90 backdrop-blur-md sticky top-0 z-50 border-b border-border shadow-sm">
+    <div className="container mx-auto flex justify-between items-center">
+      <Link href="/" className="flex items-center space-x-3">
+        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xl shadow-md">
+            EP
         </div>
+        <span className="text-2xl font-bold text-foreground">EduPrep Pro</span>
+      </Link>
+      <nav className="space-x-2">
+        <Button asChild variant="ghost" className="text-foreground hover:bg-accent/10">
+          <Link href="/dashboard">Sign In</Link>
+        </Button>
+        <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-shadow">
+          <Link href="/dashboard">Get Started</Link>
+        </Button>
+      </nav>
+    </div>
+  </header>
+);
 
-        <Tabs defaultValue="assignments" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
-            <TabsTrigger value="assignments" className="flex items-center gap-2"><LayoutGrid size={16}/>Assignments</TabsTrigger>
-            <TabsTrigger value="math-performance" className="flex items-center gap-2"><BarChart3 size={16}/>Maths Performance</TabsTrigger>
-            <TabsTrigger value="physics-performance" className="flex items-center gap-2"><BarChart3 size={16}/>Physics Performance</TabsTrigger>
-            <TabsTrigger value="important-notes" className="flex items-center gap-2"><AlertCircle size={16}/>Important Notes</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="assignments">
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Assignment Summary</CardTitle>
-                <CardDescription>Overview of all your lessons and their current status.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AssignmentSummaryTable submittedWork={submittedWork} allLessons={allLessons} />
-              </CardContent>
-            </Card>
-          </TabsContent>
+// Simple footer component for landing page
+const LandingFooter = () => (
+  <footer className="py-10 bg-muted/50 text-muted-foreground text-center border-t border-border">
+    <div className="container mx-auto">
+      <p className="font-semibold">&copy; {new Date().getFullYear()} EduPrep Pro.</p>
+      <p className="text-sm mt-1">Empowering Students, One Lesson at a Time.</p>
+    </div>
+  </footer>
+);
 
-          <TabsContent value="math-performance">
-             <PerformanceChart submittedWork={submittedWork} subject="Mathematics" />
-          </TabsContent>
-          
-          <TabsContent value="physics-performance">
-            <PerformanceChart submittedWork={submittedWork} subject="Physics" />
-          </TabsContent>
+export default function LandingPage() {
+  return (
+    <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
+      <LandingHeader />
+      <main className="flex-grow">
+        {/* Hero Section */}
+        <section className="py-20 md:py-28 bg-gradient-to-b from-background via-secondary/20 to-background">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-primary tracking-tight">
+              Unlock Your Academic Potential
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
+              EduPrep Pro is your personalized learning companion for Grade 12 Mathematics and Physics. Experience interactive lessons, AI-powered support, and seamless progress tracking.
+            </p>
+            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <Link href="/dashboard">Start Your Journey</Link>
+            </Button>
+            <div className="mt-16">
+              <Image
+                src="https://placehold.co/1000x500.png"
+                alt="EduPrep Pro Platform Preview"
+                width={1000}
+                height={500}
+                className="rounded-xl shadow-2xl mx-auto border border-border"
+                data-ai-hint="education platform dashboard"
+                priority
+              />
+            </div>
+          </div>
+        </section>
 
-          <TabsContent value="important-notes">
-            <Card>
-              <CardHeader>
-                  <CardTitle>Important Notes</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold text-foreground">Data Persistence:</span> Student progress and bookings are currently stored in your browser's local storage. This data will be lost if you clear your browser data or switch browsers.
+        {/* Features Section */}
+        <section id="features" className="py-16 md:py-24 bg-background">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-primary">
+              Why Choose EduPrep Pro?
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {[
+                {
+                  icon: <BookOpen size={32} className="text-accent" />,
+                  title: "Interactive Lessons",
+                  description: "Engage with dynamic lessons featuring video content, rich text explanations, and hands-on math problems to solidify your understanding."
+                },
+                {
+                  icon: <BarChartBig size={32} className="text-accent" />,
+                  title: "Answer Saving & Tracking",
+                  description: "Save your answers with timestamps and view past submissions. Track your progress through your personal, intuitive dashboard."
+                },
+                {
+                  icon: <CalendarCheck size={32} className="text-accent" />,
+                  title: "Easy Session Booking",
+                  description: "Need one-on-one help? Book tutoring sessions effortlessly via our integrated calendar interface with available tutors."
+                },
+                {
+                  icon: <Lightbulb size={32} className="text-accent" />,
+                  title: "AI-Powered Tutor Support",
+                  description: "Our AI analyzes student answers to provide tutors with insights, helping them pinpoint areas where you might be struggling."
+                },
+                {
+                  icon: <MessageSquare size={32} className="text-accent" />,
+                  title: "Valuable Feedback Loop",
+                  description: "Share your thoughts on lessons through short feedback forms. Your input helps us make EduPrep Pro even better for everyone!"
+                },
+                {
+                  icon: <ShieldCheck size={32} className="text-accent" />,
+                  title: "Secure & Focused Learning",
+                  description: "A dedicated platform designed to help you excel in Mathematics and Physics without common online distractions."
+                }
+              ].map((feature, index) => (
+                <div key={index} className="p-8 bg-card rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col items-center text-center">
+                  <div className="flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-6">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-3 text-primary">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {feature.description}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold text-foreground">Mock Grades:</span> Performance charts display mock scores for 'Reviewed' assignments to demonstrate functionality. Actual grading by tutors is not yet implemented in this prototype.
-                  </p>
-                   <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold text-foreground">Real-time Updates:</span> The dashboard reflects data from local storage. Real-time updates from a central database (like Firebase Firestore) would require further backend integration.
-                  </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-      </div>
-    </AppLayout>
+        {/* CTA Section */}
+        <section className="py-20 md:py-28 bg-gradient-to-br from-accent to-primary text-primary-foreground">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Elevate Your Learning?</h2>
+            <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto">
+              Join EduPrep Pro today and take the first step towards mastering Mathematics and Physics. Your personalized dashboard awaits!
+            </p>
+            <Button asChild size="lg" variant="outline" className="bg-background/10 hover:bg-background/20 text-primary-foreground border-primary-foreground/50 hover:border-primary-foreground px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <Link href="/dashboard">Get Started Now</Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+      <LandingFooter />
+    </div>
   );
 }

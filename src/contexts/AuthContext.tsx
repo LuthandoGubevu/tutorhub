@@ -24,11 +24,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userRole, setUserRole] = useState<'student' | 'tutor' | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const router = useRouter();
-  const pathname = usePathname(); // Get current pathname
+  const pathname = usePathname(); 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUserType | null) => {
-      setIsLoadingAuth(true); // Set loading true at the start of auth check
+      setIsLoadingAuth(true); 
       if (firebaseUser) {
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -38,10 +38,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             if (!userDataFromFirestore.role) {
               console.error("User document for UID:", firebaseUser.uid, "is missing the 'role' field.");
-              await signOut(auth); // Sign out if role is critical and missing
+              await signOut(auth); 
               setCurrentUser(null);
               setUserRole(null);
-              // router.replace('/login'); // Redirect if role is missing
+              if (pathname !== '/' && pathname !== '/login') router.replace('/login');
             } else {
               const appUser: AuthUserType = {
                 uid: firebaseUser.uid,
@@ -52,53 +52,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               setCurrentUser(appUser);
               setUserRole(appUser.role);
 
-              // Redirect based on role only if not already on a target dashboard or login page
               const isLoginPage = pathname === '/login';
-              if (!isLoginPage) { // Avoid redirect loop from login page
-                  if (appUser.role === 'tutor' && pathname !== '/tutor-dashboard' && !pathname.startsWith('/tutor-dashboard/')) {
+              if (isLoginPage) { 
+                  if (appUser.role === 'tutor') {
                     router.replace('/tutor-dashboard');
-                  } else if (appUser.role === 'student' && pathname !== '/dashboard' && !pathname.startsWith('/dashboard/')) {
+                  } else if (appUser.role === 'student') {
                     router.replace('/dashboard');
                   }
               }
             }
           } else {
             console.error("User document not found in Firestore for UID:", firebaseUser.uid);
-            await signOut(auth); // Sign out user if their Firestore record is missing
+            await signOut(auth); 
             setCurrentUser(null); 
             setUserRole(null);
-            // if (pathname !== '/login') router.replace('/login'); // Redirect if critical user data missing
+            if (pathname !== '/' && pathname !== '/login') router.replace('/login'); 
           }
         } catch (error) {
           console.error("Error fetching user role from Firestore:", error);
-          await signOut(auth); // Sign out on error fetching role
+          await signOut(auth); 
           setCurrentUser(null);
           setUserRole(null);
-          // if (pathname !== '/login') router.replace('/login');
+          if (pathname !== '/' && pathname !== '/login') router.replace('/login');
         }
       } else {
-        // User is signed out
         setCurrentUser(null);
         setUserRole(null);
-        // If user is signed out and not on login or public landing page, redirect to login
-        // This needs to be careful not to cause redirect loops, e.g. if / is public
-        // if (pathname !== '/login' && pathname !== '/') {
-        //    router.replace('/login');
-        // }
+        // If user is signed out and NOT on the landing page or login page,
+        // and the route is not public (e.g. / or /login), redirect to login.
+        // AppLayout will handle redirection for its pages.
+        // Specific public pages (like /) will not trigger this.
+        const publicPaths = ['/', '/login'];
+        if (!publicPaths.includes(pathname) && !pathname.startsWith('/_next/')) { // Add check for Next.js internal paths
+            // This check is more broad, specific page layouts (AppLayout, TutorDashboardLayout)
+            // will handle their own redirection logic for protected content.
+            // This is a fallback.
+             // console.log(`AuthContext: No user, on ${pathname}, considering redirect to /login`);
+             // Potentially redirect here if needed, but AppLayout handles its own children
+        }
       }
       setIsLoadingAuth(false);
     });
-    return () => unsubscribe(); // Cleanup subscription on unmount
-  }, [router, pathname]); // Add pathname to dependencies
+    return () => unsubscribe();
+  }, [router, pathname]);
 
   const loginUser = async (email: string, pass: string) => {
     setIsLoadingAuth(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will handle setting user, role, and initial redirection
     } catch (error) {
-      // setIsLoadingAuth(false); // onAuthStateChanged will set this after its flow
       console.error("Login failed:", error);
+      setIsLoadingAuth(false); // Ensure loading is false on login error
       throw error; 
     }
   };
@@ -109,13 +113,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await signOut(auth);
       setCurrentUser(null); 
       setUserRole(null);
-      router.push('/login'); 
+      router.push('/'); // Redirect to landing page on logout
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-        // onAuthStateChanged will eventually set isLoadingAuth to false
-        // but we can set it here if needed, though typically not.
-        // setIsLoadingAuth(false); 
+       setIsLoadingAuth(false); // Ensure loading is false after logout attempt
     }
   };
 
@@ -133,4 +135,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

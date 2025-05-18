@@ -1,5 +1,5 @@
 
-"use client"; // Add "use client" as useAuth is a client hook
+"use client"; 
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
@@ -8,21 +8,22 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
+import { useAuth } from '@/contexts/AuthContext'; 
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react'; // Import useEffect
 
 interface NavItem {
   href: string;
   label: string;
   icon: ReactNode;
-  role?: 'student' | 'tutor' | 'all'; // Specify which role can see this
+  role?: 'student' | 'tutor' | 'all'; 
 }
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, role: 'student' },
   { href: '/tutor-dashboard', label: 'Tutor Dashboard', icon: <ShieldCheck size={20} />, role: 'tutor' },
-  { href: '/mathematics', label: 'Mathematics', icon: <Sigma size={20} />, role: 'all' }, // Assuming lessons are for all
-  { href: '/physics', label: 'Physics', icon: <Atom size={20} />, role: 'all' }, // Assuming lessons are for all
+  { href: '/mathematics', label: 'Mathematics', icon: <Sigma size={20} />, role: 'all' }, 
+  { href: '/physics', label: 'Physics', icon: <Atom size={20} />, role: 'all' }, 
   { href: '/book-session', label: 'Book a Session', icon: <CalendarDays size={20} />, role: 'student' },
 ];
 
@@ -31,9 +32,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!isLoadingAuth && !currentUser && pathname !== '/login') {
+      // If auth is done loading, there's no user, and we're not on the login page,
+      // redirect to login. This protects all pages using AppLayout.
+      console.log(`AppLayout: No user, on ${pathname}, redirecting to /login`);
+      router.replace('/login');
+    }
+  }, [isLoadingAuth, currentUser, pathname, router]);
+
+
   const handleLogout = async () => {
     await logoutUser();
-    // router.push('/login'); // logoutUser in AuthContext already handles redirection
+    // router.push('/'); // AuthContext now handles redirection to landing page on logout
   };
   
   const filteredNavItems = navItems.filter(item => {
@@ -41,7 +52,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return item.role === userRole;
   });
 
-  if (isLoadingAuth) {
+  if (isLoadingAuth || (!currentUser && pathname !== '/login')) { 
+    // Also show loading if redirecting due to no user
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -49,17 +61,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </div>
     );
   }
-
-  // If, after loading, there's still no current user and we are not on the login page,
-  // this indicates a potential issue or an attempt to access a protected area without auth.
-  // Page-specific layouts (like TutorDashboardLayout) should handle redirection.
-  // For pages using AppLayout directly without further guards (e.g. /dashboard),
-  // this block might be a place for a fallback if needed, or ensure child pages handle it.
-  // if (!currentUser && pathname !== '/login' && !pathname.startsWith('/auth')) { // Example additional check
-  //   // router.replace('/login'); // Consider if AppLayout should enforce this globally
-  //   // Or return a minimal layout prompting login
-  // }
-
+  
+  // If we reach here, user is authenticated or it's a page that doesn't strictly need currentUser (e.g. lesson listings)
+  // However, the useEffect above should have redirected if currentUser is null for pages using AppLayout.
 
   return (
     <div className="flex min-h-screen bg-background">

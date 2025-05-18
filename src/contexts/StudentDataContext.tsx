@@ -16,7 +16,7 @@ interface StudentDataContextType {
 
 const StudentDataContext = createContext<StudentDataContextType | undefined>(undefined);
 
-const SUBMITTED_WORK_STORAGE_KEY = 'ikasiTutoring_submittedWork_v2'; // Updated key for new structure
+const SUBMITTED_WORK_STORAGE_KEY = 'ikasiTutoring_submittedWork_v3'; // Incremented version for new structure
 const BOOKINGS_STORAGE_KEY = 'ikasiTutoring_bookings_v2';
 
 // Helper to assign a mock score if work is reviewed
@@ -39,7 +39,9 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
         return parsedWork.map(work => {
           const lessonSet = work.lesson.subject === 'Mathematics' ? mathematicsLessons : physicsLessons;
           const fullLesson = lessonSet.find(l => l.id === work.lesson.id) || work.lesson;
-          return assignMockScoreIfNeeded({ ...work, lesson: fullLesson });
+          // Ensure studentId is present, assign mock if somehow missing from old data
+          const workWithStudentId = { ...work, lesson: fullLesson, studentId: work.studentId || 'unknown_student' };
+          return assignMockScoreIfNeeded(workWithStudentId);
         });
       }
       return [];
@@ -67,19 +69,23 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   }, [bookings]);
 
-  const addSubmittedWork = (work: SubmittedWork) => {
-    const workWithScore = assignMockScoreIfNeeded(work);
+  const addSubmittedWork = (newWork: SubmittedWork) => { // Parameter is now newWork
+    const workWithScore = assignMockScoreIfNeeded(newWork); // newWork already has studentId from submitAnswerAction
     setSubmittedWork(prev => [workWithScore, ...prev.filter(p => p.id !== workWithScore.id)].sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
   };
 
   const updateSubmittedWork = (workId: string, updates: Partial<SubmittedWork>) => {
     setSubmittedWork(prev => prev.map(work => {
       if (work.id === workId) {
-        const updatedWork = { ...work, ...updates };
-        return assignMockScoreIfNeeded(updatedWork);
+        let updatedWork = { ...work, ...updates };
+        // If status is being set to 'Reviewed' and no score exists, or if a score is explicitly passed in updates
+        if (updates.status === 'Reviewed' && typeof updatedWork.score === 'undefined') {
+             updatedWork = assignMockScoreIfNeeded(updatedWork);
+        }
+        return updatedWork;
       }
       return work;
-    }));
+    }).sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
   };
 
   const addBooking = (booking: Booking) => {

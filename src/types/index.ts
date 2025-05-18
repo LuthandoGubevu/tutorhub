@@ -27,6 +27,7 @@ export interface StudentAnswer {
 export interface SubmittedWork {
   id: string;
   lesson: Lesson;
+  studentId: string; // Added studentId
   studentAnswer: string;
   submittedAt: string;
   aiFeedbackSuggestion?: string;

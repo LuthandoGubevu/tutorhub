@@ -9,6 +9,7 @@ import FeedbackForm from './FeedbackForm';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { useStudentData } from '@/contexts/StudentDataContext';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 import { useToast } from '@/hooks/use-toast';
 import { submitAnswerAction } from '@/lib/actions';
 import { Loader2, Send, CheckCircle, HelpCircle } from 'lucide-react';
@@ -32,7 +33,8 @@ interface LessonDisplayProps {
 export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDisplayProps) {
   const [answer, setAnswer] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addSubmittedWork, submittedWork, updateSubmittedWork } = useStudentData();
+  const { addSubmittedWork, submittedWork } = useStudentData(); // Removed updateSubmittedWork as it's not used here by student
+  const { currentUser } = useAuth(); // Get currentUser for studentId
   const { toast } = useToast();
   const [currentSubmission, setCurrentSubmission] = useState<SubmittedWork | undefined>(undefined);
 
@@ -44,36 +46,28 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
         setCurrentSubmission(existingSubmission);
       }
     } else {
-      // Reset for a new submission if no initialSubmissionId or if lesson changes
       setAnswer('');
       setCurrentSubmission(undefined);
-      // const lastSubmissionForThisLesson = submittedWork.find(s => s.lesson.id === lesson.id);
-      // if (lastSubmissionForThisLesson) {
-      // }
     }
   }, [initialSubmissionId, submittedWork, lesson.id]);
 
 
   const handleSubmitAnswer = async () => {
+    if (!currentUser?.uid) {
+      toast({ title: "Error", description: "You must be logged in to submit an answer.", variant: "destructive" });
+      return;
+    }
     if (!answer.trim()) {
       toast({ title: "Answer Required", description: "Please enter your answer before submitting.", variant: "destructive" });
       return;
     }
     setIsSubmitting(true);
-    const result = await submitAnswerAction(lesson.id, answer, lesson.subject);
+    const result = await submitAnswerAction(lesson.id, answer, lesson.subject, currentUser.uid);
     setIsSubmitting(false);
 
-    if (result.success && result.submittedAnswer) {
-      const newSubmission: SubmittedWork = {
-        id: `submission-${Date.now()}`, // Ensure unique ID generation
-        lesson: lesson,
-        studentAnswer: result.submittedAnswer.answer,
-        submittedAt: result.submittedAnswer.timestamp,
-        aiFeedbackSuggestion: result.aiFeedbackSuggestion,
-        status: 'Pending',
-      };
-      addSubmittedWork(newSubmission);
-      setCurrentSubmission(newSubmission); 
+    if (result.success && result.newSubmission) {
+      addSubmittedWork(result.newSubmission); // Use result.newSubmission
+      setCurrentSubmission(result.newSubmission); 
       toast({ title: "Answer Submitted!", description: "Your answer has been saved. AI feedback (if any) is available." });
     } else {
       toast({ title: "Submission Failed", description: result.error || "Could not submit your answer. Please try again.", variant: "destructive" });
@@ -157,7 +151,7 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
                   </AlertDialogContent>
                 </AlertDialog>
               )}
-              <Button onClick={handleSubmitAnswer} disabled={isSubmitting} className="bg-accent hover:bg-accent/80">
+              <Button onClick={handleSubmitAnswer} disabled={isSubmitting || !currentUser} className="bg-accent hover:bg-accent/80">
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send size={16} className="mr-2" />}
                 Submit Answer
               </Button>
@@ -188,13 +182,12 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
                 <p className="p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-md border border-green-300 dark:border-green-700">{currentSubmission.tutorFeedback}</p>
               </div>
             )}
-             <p className="text-sm text-muted-foreground">Status: {currentSubmission.status}</p>
+             <p className="text-sm text-muted-foreground">Status: {currentSubmission.status} {currentSubmission.score && `(Score: ${currentSubmission.score}%)`}</p>
           </CardContent>
         </Card>
       )}
 
-      <FeedbackForm lessonId={lesson.id} studentId="student123" />
+      <FeedbackForm lessonId={lesson.id} studentId={currentUser?.uid || "student_anonymous"} />
     </div>
   );
 }
-

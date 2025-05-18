@@ -6,11 +6,12 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyA2k4-_YjfeIfrI58b-tezV8r9m7WkPU_Q",
   authDomain: "ikasi-tutoring.firebaseapp.com",
   projectId: "ikasi-tutoring",
-  storageBucket: "ikasi-tutoring.appspot.com", // Corrected to standard .appspot.com
+  storageBucket: "ikasi-tutoring.firebasestorage.app", // Using the provided storageBucket
   messagingSenderId: "880682416579",
   appId: "1:880682416579:web:e602d67c1e8cd2b07ca576",
   measurementId: "G-XLDCKCT1J8"

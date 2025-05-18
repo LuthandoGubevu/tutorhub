@@ -44,12 +44,12 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
         setCurrentSubmission(existingSubmission);
       }
     } else {
-      // If no initial submission ID, check if there's any submission for this lesson
-      const lastSubmissionForThisLesson = submittedWork.find(s => s.lesson.id === lesson.id);
-      if (lastSubmissionForThisLesson) {
-        // Potentially pre-fill or indicate it's already attempted
-        // For now, let's just allow new submission or viewing existing through dashboard
-      }
+      // Reset for a new submission if no initialSubmissionId or if lesson changes
+      setAnswer('');
+      setCurrentSubmission(undefined);
+      // const lastSubmissionForThisLesson = submittedWork.find(s => s.lesson.id === lesson.id);
+      // if (lastSubmissionForThisLesson) {
+      // }
     }
   }, [initialSubmissionId, submittedWork, lesson.id]);
 
@@ -65,7 +65,7 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
 
     if (result.success && result.submittedAnswer) {
       const newSubmission: SubmittedWork = {
-        id: `submission-${Date.now()}`,
+        id: `submission-${Date.now()}`, // Ensure unique ID generation
         lesson: lesson,
         studentAnswer: result.submittedAnswer.answer,
         submittedAt: result.submittedAnswer.timestamp,
@@ -73,7 +73,7 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
         status: 'Pending',
       };
       addSubmittedWork(newSubmission);
-      setCurrentSubmission(newSubmission); // Show this new submission
+      setCurrentSubmission(newSubmission); 
       toast({ title: "Answer Submitted!", description: "Your answer has been saved. AI feedback (if any) is available." });
     } else {
       toast({ title: "Submission Failed", description: result.error || "Could not submit your answer. Please try again.", variant: "destructive" });
@@ -125,8 +125,9 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
         <CardContent>
           <MathInput 
             value={answer} 
-            onChange={isReadOnly ? () => {} : setAnswer} 
+            onChange={setAnswer} 
             label="Your Solution"
+            readOnly={isReadOnly}
           />
           {isReadOnly && currentSubmission && (
              <p className="mt-2 text-sm text-muted-foreground">You submitted this answer on {new Date(currentSubmission.submittedAt).toLocaleString()}.</p>
@@ -196,3 +197,4 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
     </div>
   );
 }
+

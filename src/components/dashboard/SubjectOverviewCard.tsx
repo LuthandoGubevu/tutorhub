@@ -25,16 +25,14 @@ export default function SubjectOverviewCard({
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow w-full">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-primary flex items-center">
-            {icon}
-            <span className="ml-2">{subjectName}</span>
-          </CardTitle>
-          <span className="text-sm text-muted-foreground">
-            {completionPercentage}% Complete
-          </span>
-        </div>
+        <CardTitle className="text-2xl font-bold text-primary flex items-center">
+          {icon}
+          <span className="ml-2">{subjectName}</span>
+        </CardTitle>
         <CardDescription>Overview of your progress in {subjectName}.</CardDescription>
+        <p className="text-sm text-muted-foreground mt-1">
+          {completionPercentage}% Complete
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -58,3 +56,4 @@ export default function SubjectOverviewCard({
     </Card>
   );
 }
+

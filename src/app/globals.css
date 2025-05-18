@@ -45,13 +45,13 @@ body {
 
     /* Sidebar specific theme */
     --sidebar-background: 233 36% 28%; /* Darker, slightly desaturated blue */
-    --sidebar-foreground: 0 0% 95%; /* Light text for sidebar */
+    --sidebar-foreground: 0 0% 10%; /* Dark Gray / Black text for sidebar */
     
     --sidebar-primary: 0 80% 55%; /* Vibrant Red for active/hover in sidebar */
     --sidebar-primary-foreground: 0 0% 100%; /* White text for sidebar primary */
     
     --sidebar-accent: 233 36% 35%; /* Hover for non-active items */
-    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-accent-foreground: 0 0% 10%; /* Dark Gray / Black text for sidebar accent */
     
     --sidebar-border: 233 36% 20%; /* Darker border for sidebar elements */
     --sidebar-ring: 0 80% 55%; /* Vibrant Red for focus rings in sidebar */
@@ -94,13 +94,13 @@ body {
 
     /* Dark Sidebar specific theme */
     --sidebar-background: 230 20% 12%; 
-    --sidebar-foreground: 0 0% 90%;
+    --sidebar-foreground: 0 0% 10%; /* Dark Gray / Black text for dark sidebar */
     
     --sidebar-primary: 0 80% 65%; /* Lighter vibrant red for active/hover in dark sidebar */
     --sidebar-primary-foreground: 0 0% 100%; /* White text for dark sidebar primary */
     
     --sidebar-accent: 230 20% 20%;
-    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 10%; /* Dark Gray / Black text for dark sidebar accent */
     
     --sidebar-border: 230 20% 8%;
     --sidebar-ring: 0 80% 65%; /* Lighter vibrant red for focus rings in dark sidebar */

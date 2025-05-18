@@ -59,6 +59,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   } else if (appUser.role === 'student') {
                     router.replace('/dashboard');
                   }
+              } else {
+                // If user is already logged in and on a page that's not login,
+                // and role is determined, this logic might be redundant if AppLayout also handles it,
+                // but it can serve as a fallback.
+                // Example: If somehow user lands on /mathematics before role is fully set by AppLayout's effect.
               }
             }
           } else {
@@ -78,17 +83,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         setCurrentUser(null);
         setUserRole(null);
-        // If user is signed out and NOT on the landing page or login page,
-        // and the route is not public (e.g. / or /login), redirect to login.
-        // AppLayout will handle redirection for its pages.
-        // Specific public pages (like /) will not trigger this.
-        const publicPaths = ['/', '/login'];
-        if (!publicPaths.includes(pathname) && !pathname.startsWith('/_next/')) { // Add check for Next.js internal paths
-            // This check is more broad, specific page layouts (AppLayout, TutorDashboardLayout)
-            // will handle their own redirection logic for protected content.
-            // This is a fallback.
-             // console.log(`AuthContext: No user, on ${pathname}, considering redirect to /login`);
-             // Potentially redirect here if needed, but AppLayout handles its own children
+        const protectedPaths = ['/dashboard', '/tutor-dashboard', '/mathematics', '/physics', '/book-session'];
+        // Check if the current path is one of the protected ones, excluding parameterized lesson routes for now
+        // More specific layouts (AppLayout, TutorDashboardLayout) handle their specific children.
+        if (protectedPaths.some(p => pathname.startsWith(p)) && pathname !== '/login') {
+            // console.log(`AuthContext: No user, on protected path ${pathname}, redirecting to /login`);
+            // router.replace('/login'); // AppLayout and TutorDashboardLayout handle this more specifically.
         }
       }
       setIsLoadingAuth(false);
@@ -100,24 +100,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoadingAuth(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
+      // onAuthStateChanged will handle setting user, role, and redirection
     } catch (error) {
-      console.error("Login failed:", error);
+      // console.error("Login failed:", error); // Removed this line
       setIsLoadingAuth(false); // Ensure loading is false on login error
-      throw error; 
+      throw error; // Error is re-thrown to be handled by the calling page
     }
+    // Do not set isLoadingAuth to false here if login is successful,
+    // onAuthStateChanged will trigger and set it appropriately after role fetching.
   };
 
   const logoutUser = async () => {
     setIsLoadingAuth(true);
     try {
       await signOut(auth);
-      setCurrentUser(null); 
-      setUserRole(null);
+      // Setting user and role to null is handled by onAuthStateChanged
       router.push('/'); // Redirect to landing page on logout
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-       setIsLoadingAuth(false); // Ensure loading is false after logout attempt
+       // onAuthStateChanged will set isLoadingAuth to false after user state is null
     }
   };
 

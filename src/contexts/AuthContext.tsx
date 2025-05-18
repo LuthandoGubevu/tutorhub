@@ -19,6 +19,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// !!! IMPORTANT: REPLACE THIS WITH THE ACTUAL TUTOR'S EMAIL ADDRESS !!!
+const TUTOR_EMAIL_ADDRESS = 'main.tutor@ikasi.com'; 
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<AuthUserType | null>(null);
   const [userRole, setUserRole] = useState<'student' | 'tutor' | null>(null);
@@ -31,26 +34,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoadingAuth(true); 
       if (firebaseUser) {
         try {
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          
           let resolvedRole: 'student' | 'tutor' | null = null;
           let resolvedDisplayName: string | null = firebaseUser.displayName;
 
-          if (userDoc.exists()) {
-            const userDataFromFirestore = userDoc.data() as { role?: 'student' | 'tutor', displayName?: string };
-            if (userDataFromFirestore.role) {
-              resolvedRole = userDataFromFirestore.role;
-            } else {
-              console.warn(`Firestore document for UID ${firebaseUser.uid} exists but is missing the 'role' field. Defaulting to 'student' for testing. Please define roles explicitly in Firestore for production.`);
-              resolvedRole = 'student'; // Default to student for testing
+          if (firebaseUser.email === TUTOR_EMAIL_ADDRESS) {
+            resolvedRole = 'tutor';
+            // Attempt to get displayName from Firestore for consistency, even for the tutor
+            const userDocRefTutor = doc(db, 'users', firebaseUser.uid);
+            const userDocTutor = await getDoc(userDocTutor);
+            if (userDocTutor.exists() && userDocTutor.data()?.displayName) {
+              resolvedDisplayName = userDocTutor.data()?.displayName;
             }
-            if (userDataFromFirestore.displayName) {
-              resolvedDisplayName = userDataFromFirestore.displayName;
-            }
+             console.log(`User with email ${firebaseUser.email} assigned 'tutor' role based on hardcoded email.`);
           } else {
-            console.warn(`Firestore document not found for UID ${firebaseUser.uid}. Defaulting to 'student' role for testing. Please create user documents with roles in Firestore for production.`);
-            resolvedRole = 'student'; // Default to student for testing
+            // For all other emails, fetch role from Firestore, default to 'student' if not found
+            const userDocRef = doc(db, 'users', firebaseUser.uid);
+            const userDoc = await getDoc(userDocRef);
+            
+            if (userDoc.exists()) {
+              const userDataFromFirestore = userDoc.data() as { role?: 'student' | 'tutor', displayName?: string };
+              if (userDataFromFirestore.role) {
+                resolvedRole = userDataFromFirestore.role;
+              } else {
+                console.warn(`Firestore document for UID ${firebaseUser.uid} exists but is missing the 'role' field. Defaulting to 'student'. Please define roles explicitly in Firestore for production.`);
+                resolvedRole = 'student'; // Default to student
+              }
+              if (userDataFromFirestore.displayName) {
+                resolvedDisplayName = userDataFromFirestore.displayName;
+              }
+            } else {
+              console.warn(`Firestore document not found for UID ${firebaseUser.uid}. Defaulting to 'student' role as not the designated tutor email. Please create user documents with roles in Firestore for production or if specific non-tutor roles are needed.`);
+              resolvedRole = 'student'; // Default to student
+            }
           }
 
           const appUser: AuthUserType = {
@@ -70,19 +85,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 router.replace('/dashboard');
               } else {
                 // Should not happen with the default logic, but as a fallback
+                console.warn("User authenticated but role could not be determined, redirecting to landing.");
                 router.replace('/'); 
               }
           }
         } catch (error) {
           console.error("Error fetching user role from Firestore or processing user data:", error);
-          // Keep user authenticated with Firebase, but default role for safety, or sign out.
-          // For now, let's default to student and log error, but keep them signed in.
            console.warn(`Error during role processing for UID ${firebaseUser.uid}. Defaulting to 'student' role. Review Firestore setup.`, error);
            const appUserOnError: AuthUserType = {
              uid: firebaseUser.uid,
              email: firebaseUser.email,
              displayName: firebaseUser.displayName,
-             role: 'student', // Default role on error for testing
+             role: 'student', // Default role on error
            };
           setCurrentUser(appUserOnError);
           setUserRole('student');
@@ -117,13 +131,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoadingAuth(true);
     try {
       await signOut(auth);
-      setCurrentUser(null); // Explicitly set user to null
-      setUserRole(null);   // Explicitly set role to null
-      router.push('/'); 
+      // setCurrentUser and setUserRole will be handled by onAuthStateChanged
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-       setIsLoadingAuth(false); // Ensure loading is false after logout attempt
+       // onAuthStateChanged will set isLoadingAuth to false after processing logout
     }
   };
 

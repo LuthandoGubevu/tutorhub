@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Home, BookOpenText, Users, CalendarDays, Atom, Sigma, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react';
+import { Home, BookOpenText, Users, CalendarDays, Atom, Sigma, LayoutDashboard, LogOut, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -27,13 +27,13 @@ const navItems: NavItem[] = [
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const { userRole, mockLogout, currentUser } = useAuth(); // Get userRole and logout function
+  const { userRole, logoutUser, currentUser, isLoadingAuth } = useAuth(); 
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    mockLogout();
-    router.push('/login');
+  const handleLogout = async () => {
+    await logoutUser();
+    // router.push('/login'); // logoutUser in AuthContext already handles redirection
   };
   
   const filteredNavItems = navItems.filter(item => {
@@ -41,17 +41,31 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return item.role === userRole;
   });
 
-  if (!currentUser) { // If no user, don't render full AppLayout, or redirect from layout
-     // This check might be redundant if individual page layouts handle redirection,
-     // but can be a fallback.
-     // Consider redirecting to /login from here if user is null and not on /login page.
+  if (isLoadingAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-foreground">Loading User Data...</p>
+      </div>
+    );
   }
+
+  // If, after loading, there's still no current user and we are not on the login page,
+  // this indicates a potential issue or an attempt to access a protected area without auth.
+  // Page-specific layouts (like TutorDashboardLayout) should handle redirection.
+  // For pages using AppLayout directly without further guards (e.g. /dashboard),
+  // this block might be a place for a fallback if needed, or ensure child pages handle it.
+  // if (!currentUser && pathname !== '/login' && !pathname.startsWith('/auth')) { // Example additional check
+  //   // router.replace('/login'); // Consider if AppLayout should enforce this globally
+  //   // Or return a minimal layout prompting login
+  // }
+
 
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 h-screen w-64 bg-sidebar-background text-sidebar-foreground shadow-lg flex flex-col">
         <div className="p-6 flex items-center space-x-3 border-b border-sidebar-border">
-          <Link href="/" className="flex items-center space-x-3 group">
+          <Link href={userRole === 'tutor' ? "/tutor-dashboard" : "/dashboard"} className="flex items-center space-x-3 group">
             <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
               iK
             </div>

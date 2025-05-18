@@ -7,7 +7,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, db } from '@/lib/firebase'; // Import Firebase instances
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User as FirebaseUserType } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation'; // Import usePathname
 
 interface AuthContextType {
   currentUser: AuthUserType | null;
@@ -24,64 +24,81 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userRole, setUserRole] = useState<'student' | 'tutor' | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const router = useRouter();
+  const pathname = usePathname(); // Get current pathname
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUserType | null) => {
+      setIsLoadingAuth(true); // Set loading true at the start of auth check
       if (firebaseUser) {
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
-            const userDataFromFirestore = userDoc.data() as { role: 'student' | 'tutor', displayName?: string }; // Define more clearly based on your Firestore structure
-            const appUser: AuthUserType = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: userDataFromFirestore.displayName || firebaseUser.displayName, // Prefer Firestore displayName
-              role: userDataFromFirestore.role,
-            };
-            setCurrentUser(appUser);
-            setUserRole(appUser.role);
-
-             // Redirect based on role after fetching
-            if (appUser.role === 'tutor') {
-              router.replace('/tutor-dashboard');
+            const userDataFromFirestore = userDoc.data() as { role: 'student' | 'tutor', displayName?: string };
+            
+            if (!userDataFromFirestore.role) {
+              console.error("User document for UID:", firebaseUser.uid, "is missing the 'role' field.");
+              await signOut(auth); // Sign out if role is critical and missing
+              setCurrentUser(null);
+              setUserRole(null);
+              // router.replace('/login'); // Redirect if role is missing
             } else {
-              router.replace('/dashboard');
-            }
+              const appUser: AuthUserType = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: userDataFromFirestore.displayName || firebaseUser.displayName,
+                role: userDataFromFirestore.role,
+              };
+              setCurrentUser(appUser);
+              setUserRole(appUser.role);
 
+              // Redirect based on role only if not already on a target dashboard or login page
+              const isLoginPage = pathname === '/login';
+              if (!isLoginPage) { // Avoid redirect loop from login page
+                  if (appUser.role === 'tutor' && pathname !== '/tutor-dashboard' && !pathname.startsWith('/tutor-dashboard/')) {
+                    router.replace('/tutor-dashboard');
+                  } else if (appUser.role === 'student' && pathname !== '/dashboard' && !pathname.startsWith('/dashboard/')) {
+                    router.replace('/dashboard');
+                  }
+              }
+            }
           } else {
-            // Handle case where user exists in Auth but not Firestore (e.g., incomplete signup)
             console.error("User document not found in Firestore for UID:", firebaseUser.uid);
-            setCurrentUser(null); // Or a minimal user object if preferred
-            setUserRole(null);
             await signOut(auth); // Sign out user if their Firestore record is missing
+            setCurrentUser(null); 
+            setUserRole(null);
+            // if (pathname !== '/login') router.replace('/login'); // Redirect if critical user data missing
           }
         } catch (error) {
           console.error("Error fetching user role from Firestore:", error);
+          await signOut(auth); // Sign out on error fetching role
           setCurrentUser(null);
           setUserRole(null);
-          // Optionally sign out user if there's an error fetching critical role data
-          // await signOut(auth); 
+          // if (pathname !== '/login') router.replace('/login');
         }
       } else {
         // User is signed out
         setCurrentUser(null);
         setUserRole(null);
+        // If user is signed out and not on login or public landing page, redirect to login
+        // This needs to be careful not to cause redirect loops, e.g. if / is public
+        // if (pathname !== '/login' && pathname !== '/') {
+        //    router.replace('/login');
+        // }
       }
       setIsLoadingAuth(false);
     });
     return () => unsubscribe(); // Cleanup subscription on unmount
-  }, [router]);
+  }, [router, pathname]); // Add pathname to dependencies
 
   const loginUser = async (email: string, pass: string) => {
     setIsLoadingAuth(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will handle setting user and role, and redirecting
+      // onAuthStateChanged will handle setting user, role, and initial redirection
     } catch (error) {
-      setIsLoadingAuth(false);
+      // setIsLoadingAuth(false); // onAuthStateChanged will set this after its flow
       console.error("Login failed:", error);
-      // Propagate error to UI if needed
       throw error; 
     }
   };
@@ -90,15 +107,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoadingAuth(true);
     try {
       await signOut(auth);
-      // onAuthStateChanged will handle clearing user and role
-      setCurrentUser(null); // Explicitly clear state
+      setCurrentUser(null); 
       setUserRole(null);
-      router.push('/login'); // Redirect to login after logout
+      router.push('/login'); 
     } catch (error) {
       console.error("Logout failed:", error);
-      // Even if logout fails, ensure local state is cleared and UI reflects loading finished
     } finally {
-        setIsLoadingAuth(false);
+        // onAuthStateChanged will eventually set isLoadingAuth to false
+        // but we can set it here if needed, though typically not.
+        // setIsLoadingAuth(false); 
     }
   };
 
@@ -116,3 +133,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

@@ -37,6 +37,57 @@ const LandingFooter = () => (
 );
 
 export default function LandingPage() {
+  const features = [
+    {
+      icon: <BookOpen size={32} className="text-accent" />,
+      title: "Interactive Lessons",
+      description: "Engage with dynamic lessons featuring video content, rich text explanations, and hands-on math problems to solidify your understanding.",
+      imageSrc: "https://placehold.co/600x400.png",
+      imageAlt: "Interactive online lessons",
+      dataAiHint: "education online learning"
+    },
+    {
+      icon: <BarChartBig size={32} className="text-accent" />,
+      title: "Answer Saving & Tracking",
+      description: "Save your answers with timestamps and view past submissions. Track your progress through your personal, intuitive dashboard.",
+      imageSrc: "https://placehold.co/600x400.png",
+      imageAlt: "Student progress dashboard",
+      dataAiHint: "dashboard analytics"
+    },
+    {
+      icon: <CalendarCheck size={32} className="text-accent" />,
+      title: "Easy Session Booking",
+      description: "Need one-on-one help? Book tutoring sessions effortlessly via our integrated calendar interface with available tutors.",
+      imageSrc: "https://placehold.co/600x400.png",
+      imageAlt: "Calendar for booking sessions",
+      dataAiHint: "calendar schedule"
+    },
+    {
+      icon: <Lightbulb size={32} className="text-accent" />,
+      title: "AI-Powered Tutor Support",
+      description: "Our AI analyzes student answers to provide tutors with insights, helping them pinpoint areas where you might be struggling.",
+      imageSrc: "https://placehold.co/600x400.png",
+      imageAlt: "AI brain providing support",
+      dataAiHint: "artificial intelligence brain"
+    },
+    {
+      icon: <MessageSquare size={32} className="text-accent" />,
+      title: "Valuable Feedback Loop",
+      description: "Share your thoughts on lessons through short feedback forms. Your input helps us make iKasi Tutoring even better for everyone!",
+      imageSrc: "https://placehold.co/600x400.png",
+      imageAlt: "Feedback and communication",
+      dataAiHint: "communication feedback"
+    },
+    {
+      icon: <ShieldCheck size={32} className="text-accent" />,
+      title: "Secure & Focused Learning",
+      description: "A dedicated platform designed to help you excel in Mathematics and Physics without common online distractions.",
+      imageSrc: "https://placehold.co/600x400.png",
+      imageAlt: "Secure learning environment",
+      dataAiHint: "security shield"
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
       <LandingHeader />
@@ -55,8 +106,9 @@ export default function LandingPage() {
             </Button>
             <div className="mt-16">
               <Image
-                src="/ikasi-tutoring-hero.png"
+                src="https://placehold.co/1000x500.png"
                 alt="iKasi Tutoring Platform Preview"
+                data-ai-hint="students learning"
                 width={1000}
                 height={500}
                 className="rounded-xl shadow-2xl mx-auto border border-border"
@@ -73,46 +125,27 @@ export default function LandingPage() {
               Why Choose iKasi Tutoring?
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {[
-                {
-                  icon: <BookOpen size={32} className="text-accent" />,
-                  title: "Interactive Lessons",
-                  description: "Engage with dynamic lessons featuring video content, rich text explanations, and hands-on math problems to solidify your understanding."
-                },
-                {
-                  icon: <BarChartBig size={32} className="text-accent" />,
-                  title: "Answer Saving & Tracking",
-                  description: "Save your answers with timestamps and view past submissions. Track your progress through your personal, intuitive dashboard."
-                },
-                {
-                  icon: <CalendarCheck size={32} className="text-accent" />,
-                  title: "Easy Session Booking",
-                  description: "Need one-on-one help? Book tutoring sessions effortlessly via our integrated calendar interface with available tutors."
-                },
-                {
-                  icon: <Lightbulb size={32} className="text-accent" />,
-                  title: "AI-Powered Tutor Support",
-                  description: "Our AI analyzes student answers to provide tutors with insights, helping them pinpoint areas where you might be struggling."
-                },
-                {
-                  icon: <MessageSquare size={32} className="text-accent" />,
-                  title: "Valuable Feedback Loop",
-                  description: "Share your thoughts on lessons through short feedback forms. Your input helps us make iKasi Tutoring even better for everyone!"
-                },
-                {
-                  icon: <ShieldCheck size={32} className="text-accent" />,
-                  title: "Secure & Focused Learning",
-                  description: "A dedicated platform designed to help you excel in Mathematics and Physics without common online distractions."
-                }
-              ].map((feature, index) => (
-                <div key={index} className="p-8 bg-card rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col items-center text-center">
-                  <div className="flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-6">
-                    {feature.icon}
+              {features.map((feature, index) => (
+                <div key={index} className="bg-card rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden">
+                  <div className="w-full h-48 relative">
+                    <Image
+                      src={feature.imageSrc}
+                      alt={feature.imageAlt}
+                      data-ai-hint={feature.dataAiHint}
+                      fill
+                      style={{objectFit:"cover"}}
+                      className="rounded-t-xl"
+                    />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-3 text-primary">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
+                  <div className="p-8 flex flex-col items-center text-center flex-grow">
+                    <div className="flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-6">
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-2xl font-semibold mb-3 text-primary">{feature.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

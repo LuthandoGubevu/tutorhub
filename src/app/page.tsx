@@ -29,15 +29,25 @@ export default function DashboardPage() {
   const mathData = getSubjectData('Mathematics');
   const physicsData = getSubjectData('Physics');
 
+  const totalLessons = mathData.total + physicsData.total;
+  const totalCompletedLessons = mathData.completed + physicsData.completed;
+  const overallCompletionPercentage = totalLessons > 0 ? Math.round((totalCompletedLessons / totalLessons) * 100) : 0;
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <Card className="shadow-lg bg-gradient-to-r from-primary to-accent text-primary-foreground">
-          <CardHeader>
-            <CardTitle className="text-4xl font-bold">Your Learning Dashboard</CardTitle>
-            <CardDescription className="text-lg text-primary-foreground/90">
-              Track your progress, manage assignments, and view performance insights.
-            </CardDescription>
+          <CardHeader className="flex flex-row justify-between items-start p-6">
+            <div>
+              <CardTitle className="text-4xl font-bold">Dashboard</CardTitle>
+              <CardDescription className="text-lg text-primary-foreground/90 mt-1">
+                Track your progress, manage assignments, and view performance insights.
+              </CardDescription>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-primary-foreground/80">Overall Progress</p>
+              <p className="text-3xl font-bold text-primary-foreground">{overallCompletionPercentage}%</p>
+            </div>
           </CardHeader>
         </Card>
 

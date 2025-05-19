@@ -3,14 +3,14 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Home, BookOpenText, Users, CalendarDays, Atom, Sigma, LayoutDashboard, LogOut, ShieldCheck, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Sigma, Atom, CalendarDays, ShieldCheck, LogOut, Loader2 } from 'lucide-react'; // Adjusted imports
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
+import Image from 'next/image'; // Import next/image
 import { useAuth } from '@/contexts/AuthContext'; 
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react'; // Import useEffect
+import { useEffect } from 'react';
 
 interface NavItem {
   href: string;
@@ -33,9 +33,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoadingAuth && !currentUser && pathname !== '/login') {
-      // If auth is done loading, there's no user, and we're not on the login page,
-      // redirect to login. This protects all pages using AppLayout.
+    if (!isLoadingAuth && !currentUser && pathname !== '/login' && pathname !== '/') {
       console.log(`AppLayout: No user, on ${pathname}, redirecting to /login`);
       router.replace('/login');
     }
@@ -52,8 +50,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return item.role === userRole;
   });
 
+  // Show loading state until auth status and user role are confirmed
   if (isLoadingAuth || (!currentUser && pathname !== '/login' && pathname !== '/')) { 
-    // Also show loading if redirecting due to no user, but not on landing page
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -65,12 +63,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 h-screen w-64 bg-sidebar-background text-sidebar-foreground shadow-lg flex flex-col">
-        <div className="p-6 flex items-center space-x-3 border-b border-sidebar-border">
-          <Link href={userRole === 'tutor' ? "/tutor-dashboard" : "/dashboard"} className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-              IA
-            </div>
-            <h1 className="text-xl font-semibold text-sidebar-foreground group-hover:text-sidebar-primary transition-colors">ITM Academy</h1>
+        <div className="p-4 flex items-center border-b border-sidebar-border">
+          <Link href={userRole === 'tutor' ? "/tutor-dashboard" : "/dashboard"} className="flex items-center group w-full">
+            <Image
+              src="/logo.png"
+              alt="ITM Academy Logo"
+              width={150} // Adjusted for sidebar - you can fine-tune this
+              height={45}  // Adjusted for sidebar - and this, maintaining aspect ratio
+              className="rounded-md" // If your logo file has transparency and needs rounding, or is already rounded.
+            />
+            {/* Title removed to match landing page header */}
           </Link>
         </div>
         <ScrollArea className="flex-1">
@@ -81,7 +83,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 variant="ghost"
                 className={cn(
                   "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  pathname === item.href ? "bg-sidebar-primary text-sidebar-primary-foreground" : ""
+                  pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)) 
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                    : ""
                 )}
                 asChild
               >

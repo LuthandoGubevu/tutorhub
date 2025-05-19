@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -44,17 +45,17 @@ body {
     --radius: 0.5rem;
 
     /* Sidebar specific theme */
-    --sidebar-background: 233 36% 28%; /* Darker, slightly desaturated blue */
-    --sidebar-foreground: 0 0% 10%; /* Dark Gray / Black text for sidebar */
+    --sidebar-background: 207 88% 11%; /* #051d30 */
+    --sidebar-foreground: 0 0% 100%;   /* White text for sidebar */
     
-    --sidebar-primary: 0 80% 55%; /* Vibrant Red for active/hover in sidebar */
+    --sidebar-primary: 208 54% 43%;    /* #3475a6, for active items in sidebar */
     --sidebar-primary-foreground: 0 0% 100%; /* White text for sidebar primary */
     
-    --sidebar-accent: 233 36% 35%; /* Hover for non-active items */
-    --sidebar-accent-foreground: 0 0% 10%; /* Dark Gray / Black text for sidebar accent */
+    --sidebar-accent: 208 54% 43%;     /* #3475a6, Hover for non-active items - same as primary */
+    --sidebar-accent-foreground: 0 0% 100%; /* White text for sidebar accent */
     
-    --sidebar-border: 233 36% 20%; /* Darker border for sidebar elements */
-    --sidebar-ring: 0 80% 55%; /* Vibrant Red for focus rings in sidebar */
+    --sidebar-border: 207 50% 20%;    /* A slightly lighter, desaturated blue/gray for borders */
+    --sidebar-ring: 208 54% 43%;       /* #3475a6 for focus rings in sidebar */
   }
 
   .dark {
@@ -92,18 +93,18 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    /* Dark Sidebar specific theme */
-    --sidebar-background: 230 20% 12%; 
-    --sidebar-foreground: 0 0% 10%; /* Dark Gray / Black text for dark sidebar */
+    /* Dark Sidebar specific theme - ensuring consistency with new light mode sidebar */
+    --sidebar-background: 207 88% 11%; 
+    --sidebar-foreground: 0 0% 100%; 
     
-    --sidebar-primary: 0 80% 65%; /* Lighter vibrant red for active/hover in dark sidebar */
-    --sidebar-primary-foreground: 0 0% 100%; /* White text for dark sidebar primary */
+    --sidebar-primary: 208 54% 43%; 
+    --sidebar-primary-foreground: 0 0% 100%;
     
-    --sidebar-accent: 230 20% 20%;
-    --sidebar-accent-foreground: 0 0% 10%; /* Dark Gray / Black text for dark sidebar accent */
+    --sidebar-accent: 208 54% 43%;
+    --sidebar-accent-foreground: 0 0% 100%;
     
-    --sidebar-border: 230 20% 8%;
-    --sidebar-ring: 0 80% 65%; /* Lighter vibrant red for focus rings in dark sidebar */
+    --sidebar-border: 207 50% 15%; /* Slightly darker border for dark mode sidebar elements */
+    --sidebar-ring: 208 54% 43%; 
   }
 }
 

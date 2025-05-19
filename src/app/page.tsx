@@ -12,8 +12,8 @@ const LandingHeader = () => (
         <Image
           src="/logo.png"
           alt="ITM Academy Logo"
-          width={40}
-          height={40}
+          width={200}
+          height={200}
           className="rounded-lg shadow-md"
         />
         <span className="text-2xl font-bold text-white">ITM Academy</span>
@@ -149,4 +149,3 @@ export default function LandingPage() {
     </div>
   );
 }
-

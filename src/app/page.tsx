@@ -89,7 +89,7 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="py-20 md:py-28 bg-gradient-to-b from-[#103452] via-primary/5 to-[#103452]"> {/* Adjusted gradient */}
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-primary tracking-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-white tracking-tight">
               Unlock Your Academic Potential
             </h1>
             <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-3xl mx-auto leading-relaxed">
@@ -115,7 +115,7 @@ export default function LandingPage() {
         {/* Features Section */}
         <section id="features" className="py-16 md:py-24 bg-[#103452]">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-primary">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
               Why Choose iKasi Tutoring?
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -134,7 +134,7 @@ export default function LandingPage() {
                     <div className="flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-6">
                       {feature.icon}
                     </div>
-                    <h3 className="text-2xl font-semibold mb-3 text-primary">{feature.title}</h3>
+                    <h3 className="text-2xl font-semibold mb-3 text-primary">{feature.title}</h3> {/* Card titles remain primary color on white card background */}
                     <p className="text-card-foreground leading-relaxed"> {/* Use card-foreground for text on cards */}
                       {feature.description}
                     </p>

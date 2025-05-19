@@ -98,15 +98,16 @@ export default function LandingPage() {
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link href="/dashboard">Start Your Journey</Link>
             </Button>
-            <div className="mt-16">
-              <Image
-                src="/hero-section.jpg"
-                alt="iKasi Tutoring Platform Preview"
-                width={1000}
-                height={500}
-                className="rounded-xl shadow-2xl mx-auto border border-border"
-                priority
-              />
+            <div className="mt-16 mx-auto w-full max-w-4xl">
+              <div className="aspect-[1000/500] relative overflow-hidden rounded-xl shadow-2xl border border-border">
+                <Image
+                  src="/hero-section.jpg"
+                  alt="iKasi Tutoring Platform Preview"
+                  fill
+                  style={{objectFit:"cover"}}
+                  priority
+                />
+              </div>
             </div>
           </div>
         </section>

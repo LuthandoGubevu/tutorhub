@@ -15,10 +15,16 @@ const LandingHeader = () => (
         <span className="text-2xl font-bold text-white">iKasi Tutoring</span>
       </Link>
       <nav className="space-x-2">
-        <Button asChild className="bg-white text-[#103452] hover:bg-gray-200 shadow-md hover:shadow-lg transition-shadow">
+        <Button
+          asChild
+          className="bg-white/10 hover:bg-white/20 text-white border border-white/50 hover:border-white/80 rounded-md px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
+        >
           <Link href="/login">Sign In</Link>
         </Button>
-        <Button asChild className="bg-white text-[#103452] hover:bg-gray-200 shadow-md hover:shadow-lg transition-shadow">
+        <Button
+          asChild
+          className="bg-white/10 hover:bg-white/20 text-white border border-white/50 hover:border-white/80 rounded-md px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
+        >
           <Link href="/dashboard">Get Started</Link>
         </Button>
       </nav>
@@ -39,7 +45,7 @@ const LandingFooter = () => (
 export default function LandingPage() {
   const features = [
     {
-      icon: <BookOpen size={32} className="text-white" />, 
+      icon: <BookOpen size={32} className="text-white" />,
       title: "Interactive Lessons",
       description: "Engage with dynamic lessons featuring video content, rich text explanations, and hands-on math problems to solidify your understanding.",
     },
@@ -108,8 +114,7 @@ export default function LandingPage() {
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
               {features.map((feature, index) => (
-                <div key={index} className="bg-[#3475a6] border border-gray-700 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden p-8 items-center text-center">
-                  {/* Image removed from here */}
+                <div key={index} className="bg-[#3475a6] border border-gray-700/50 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden p-8 items-center text-center">
                   <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-6">
                     {feature.icon}
                   </div>
@@ -140,4 +145,3 @@ export default function LandingPage() {
     </div>
   );
 }
-

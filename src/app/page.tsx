@@ -6,16 +6,16 @@ import { BookOpen, BarChartBig, CalendarCheck, Lightbulb, MessageSquare, ShieldC
 
 // Simple header component for landing page
 const LandingHeader = () => (
-  <header className="py-4 px-4 md:px-8 bg-background/90 backdrop-blur-md sticky top-0 z-50 border-b border-border shadow-sm">
+  <header className="py-4 px-4 md:px-8 bg-[#103452]/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-700 shadow-sm">
     <div className="container mx-auto flex justify-between items-center">
       <Link href="/" className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xl shadow-md">
             iK
         </div>
-        <span className="text-2xl font-bold text-foreground">iKasi Tutoring</span>
+        <span className="text-2xl font-bold text-white">iKasi Tutoring</span>
       </Link>
       <nav className="space-x-2">
-        <Button asChild variant="ghost" className="text-foreground hover:bg-accent/10">
+        <Button asChild variant="ghost" className="text-white hover:bg-white/10">
           <Link href="/login">Sign In</Link>
         </Button>
         <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-shadow">
@@ -28,7 +28,7 @@ const LandingHeader = () => (
 
 // Simple footer component for landing page
 const LandingFooter = () => (
-  <footer className="py-10 bg-muted/50 text-muted-foreground text-center border-t border-border">
+  <footer className="py-10 bg-black/20 text-gray-300 text-center border-t border-gray-700">
     <div className="container mx-auto">
       <p className="font-semibold">&copy; {new Date().getFullYear()} iKasi Tutoring.</p>
       <p className="text-sm mt-1">Empowering Students, One Lesson at a Time.</p>
@@ -83,23 +83,23 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
+    <div className="flex flex-col min-h-screen bg-[#103452] text-white antialiased">
       <LandingHeader />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-b from-background via-secondary/20 to-background">
+        <section className="py-20 md:py-28 bg-gradient-to-b from-[#103452] via-primary/5 to-[#103452]"> {/* Adjusted gradient */}
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-primary tracking-tight">
               Unlock Your Academic Potential
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-3xl mx-auto leading-relaxed">
               iKasi Tutoring is your personalized learning companion for Grade 12 Mathematics and Physics. Experience interactive lessons, AI-powered support, and seamless progress tracking.
             </p>
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link href="/dashboard">Start Your Journey</Link>
             </Button>
             <div className="mt-16 mx-auto w-full max-w-4xl">
-              <div className="aspect-[1000/500] relative overflow-hidden rounded-xl shadow-2xl border border-border">
+              <div className="aspect-[1000/500] relative overflow-hidden rounded-xl shadow-2xl border border-gray-700">
                 <Image
                   src="/hero-section.jpg"
                   alt="iKasi Tutoring Platform Preview"
@@ -113,14 +113,14 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-16 md:py-24 bg-background">
+        <section id="features" className="py-16 md:py-24 bg-[#103452]">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-primary">
               Why Choose iKasi Tutoring?
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
               {features.map((feature, index) => (
-                <div key={index} className="bg-card rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden">
+                <div key={index} className="bg-card rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden"> {/* bg-card is white, text inside should be dark */}
                   <div className="w-full h-48 relative">
                     <Image
                       src={feature.imageSrc}
@@ -135,7 +135,7 @@ export default function LandingPage() {
                       {feature.icon}
                     </div>
                     <h3 className="text-2xl font-semibold mb-3 text-primary">{feature.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">
+                    <p className="text-card-foreground leading-relaxed"> {/* Use card-foreground for text on cards */}
                       {feature.description}
                     </p>
                   </div>
@@ -146,13 +146,13 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-br from-accent to-primary text-primary-foreground">
+        <section className="py-20 md:py-28 bg-gradient-to-br from-accent to-primary text-white"> {/* text-primary-foreground changed to text-white for safety */}
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Elevate Your Learning?</h2>
             <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto">
               Join iKasi Tutoring today and take the first step towards mastering Mathematics and Physics. Your personalized dashboard awaits!
             </p>
-            <Button asChild size="lg" variant="outline" className="bg-background/10 hover:bg-background/20 text-primary-foreground border-primary-foreground/50 hover:border-primary-foreground px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <Button asChild size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/50 hover:border-white px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link href="/dashboard">Get Started Now</Link>
             </Button>
           </div>
@@ -162,3 +162,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

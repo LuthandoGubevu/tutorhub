@@ -12,9 +12,8 @@ const LandingHeader = () => (
         <Image
           src="/logo-dark.jpg"
           alt="ITM Academy Logo"
-          width={200}
-          height={200}
-          className="rounded-lg shadow-md"
+          width={150} 
+          height={45}
         />
       </Link>
       <nav className="space-x-2">

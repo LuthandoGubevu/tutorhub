@@ -16,7 +16,7 @@ const LandingHeader = () => (
       </Link>
       <nav className="space-x-2">
         <Button asChild variant="ghost" className="text-foreground hover:bg-accent/10">
-          <Link href="/dashboard">Sign In</Link>
+          <Link href="/login">Sign In</Link>
         </Button>
         <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-shadow">
           <Link href="/dashboard">Get Started</Link>
@@ -100,7 +100,7 @@ export default function LandingPage() {
             </Button>
             <div className="mt-16">
               <Image
-                src="/hero-section.png"
+                src="/hero-section.jpg"
                 alt="iKasi Tutoring Platform Preview"
                 width={1000}
                 height={500}

@@ -108,7 +108,7 @@ export default function LandingPage() {
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
               {features.map((feature, index) => (
-                <div key={index} className="bg-[#103452] border border-gray-700 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden p-8 items-center text-center">
+                <div key={index} className="bg-[#3475a6] border border-gray-700 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden p-8 items-center text-center">
                   {/* Image removed from here */}
                   <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-6">
                     {feature.icon}

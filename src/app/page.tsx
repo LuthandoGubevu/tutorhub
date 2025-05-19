@@ -39,46 +39,34 @@ const LandingFooter = () => (
 export default function LandingPage() {
   const features = [
     {
-      icon: <BookOpen size={32} className="text-accent" />, // Accent color still fine on white card
+      icon: <BookOpen size={32} className="text-white" />, 
       title: "Interactive Lessons",
       description: "Engage with dynamic lessons featuring video content, rich text explanations, and hands-on math problems to solidify your understanding.",
-      imageSrc: "/feature-interactive.png",
-      imageAlt: "Interactive online lessons",
     },
     {
-      icon: <BarChartBig size={32} className="text-accent" />,
+      icon: <BarChartBig size={32} className="text-white" />,
       title: "Answer Saving & Tracking",
       description: "Save your answers with timestamps and view past submissions. Track your progress through your personal, intuitive dashboard.",
-      imageSrc: "/feature-tracking.png",
-      imageAlt: "Student progress dashboard",
     },
     {
-      icon: <CalendarCheck size={32} className="text-accent" />,
+      icon: <CalendarCheck size={32} className="text-white" />,
       title: "Easy Session Booking",
       description: "Need one-on-one help? Book tutoring sessions effortlessly via our integrated calendar interface with available tutors.",
-      imageSrc: "/feature-booking.png",
-      imageAlt: "Calendar for booking sessions",
     },
     {
-      icon: <Lightbulb size={32} className="text-accent" />,
+      icon: <Lightbulb size={32} className="text-white" />,
       title: "AI-Powered Tutor Support",
       description: "Our AI analyzes student answers to provide tutors with insights, helping them pinpoint areas where you might be struggling.",
-      imageSrc: "/feature-ai-support.png",
-      imageAlt: "AI brain providing support",
     },
     {
-      icon: <MessageSquare size={32} className="text-accent" />,
+      icon: <MessageSquare size={32} className="text-white" />,
       title: "Valuable Feedback Loop",
       description: "Share your thoughts on lessons through short feedback forms. Your input helps us make iKasi Tutoring even better for everyone!",
-      imageSrc: "/feature-feedback.png",
-      imageAlt: "Feedback and communication",
     },
     {
-      icon: <ShieldCheck size={32} className="text-accent" />,
+      icon: <ShieldCheck size={32} className="text-white" />,
       title: "Secure & Focused Learning",
       description: "A dedicated platform designed to help you excel in Mathematics and Physics without common online distractions.",
-      imageSrc: "/feature-secure.png",
-      imageAlt: "Secure learning environment",
     }
   ];
 
@@ -120,25 +108,15 @@ export default function LandingPage() {
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
               {features.map((feature, index) => (
-                <div key={index} className="bg-card rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden">
-                  <div className="w-full h-48 relative">
-                    <Image
-                      src={feature.imageSrc}
-                      alt={feature.imageAlt}
-                      fill
-                      style={{objectFit:"cover"}}
-                      className="rounded-t-xl"
-                    />
+                <div key={index} className="bg-[#103452] border border-gray-700 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden p-8 items-center text-center">
+                  {/* Image removed from here */}
+                  <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-6">
+                    {feature.icon}
                   </div>
-                  <div className="p-8 flex flex-col items-center text-center flex-grow">
-                    <div className="flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-6">
-                      {feature.icon}
-                    </div>
-                    <h3 className="text-2xl font-semibold mb-3 text-primary">{feature.title}</h3>
-                    <p className="text-card-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </div>
+                  <h3 className="text-2xl font-semibold mb-3 text-white">{feature.title}</h3>
+                  <p className="text-white/90 leading-relaxed flex-grow">
+                    {feature.description}
+                  </p>
                 </div>
               ))}
             </div>

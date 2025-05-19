@@ -9,9 +9,13 @@ const LandingHeader = () => (
   <header className="py-4 px-4 md:px-8 bg-[#103452]/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-700 shadow-sm">
     <div className="container mx-auto flex justify-between items-center">
       <Link href="/" className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-white text-[#103452] rounded-lg flex items-center justify-center font-bold text-xl shadow-md">
-            IA
-        </div>
+        <Image
+          src="/logo.png"
+          alt="ITM Academy Logo"
+          width={40}
+          height={40}
+          className="rounded-lg shadow-md"
+        />
         <span className="text-2xl font-bold text-white">ITM Academy</span>
       </Link>
       <nav className="space-x-2">
@@ -145,3 +149,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

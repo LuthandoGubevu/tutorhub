@@ -124,7 +124,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-br from-accent to-primary text-white">
+        <section className="py-20 md:py-28 bg-gradient-to-br from-[#3475a6] to-[#103452] text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Elevate Your Learning?</h2>
             <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto">
@@ -140,3 +140,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

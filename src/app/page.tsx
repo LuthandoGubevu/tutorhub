@@ -16,7 +16,6 @@ const LandingHeader = () => (
           height={200}
           className="rounded-lg shadow-md"
         />
-        <span className="text-2xl font-bold text-white">ITM Academy</span>
       </Link>
       <nav className="space-x-2">
         <Button

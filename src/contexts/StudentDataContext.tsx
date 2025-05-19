@@ -16,8 +16,8 @@ interface StudentDataContextType {
 
 const StudentDataContext = createContext<StudentDataContextType | undefined>(undefined);
 
-const SUBMITTED_WORK_STORAGE_KEY = 'ikasiTutoring_submittedWork_v3'; // Incremented version for new structure
-const BOOKINGS_STORAGE_KEY = 'ikasiTutoring_bookings_v2';
+const SUBMITTED_WORK_STORAGE_KEY = 'itmAcademy_submittedWork_v1'; // Updated for new brand
+const BOOKINGS_STORAGE_KEY = 'itmAcademy_bookings_v1'; // Updated for new brand
 
 // Helper to assign a mock score if work is reviewed
 const assignMockScoreIfNeeded = (work: SubmittedWork): SubmittedWork => {

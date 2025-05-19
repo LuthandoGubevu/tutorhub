@@ -10,9 +10,9 @@ const LandingHeader = () => (
     <div className="container mx-auto flex justify-between items-center">
       <Link href="/" className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-white text-[#103452] rounded-lg flex items-center justify-center font-bold text-xl shadow-md">
-            iK
+            IA
         </div>
-        <span className="text-2xl font-bold text-white">iKasi Tutoring</span>
+        <span className="text-2xl font-bold text-white">ITM Academy</span>
       </Link>
       <nav className="space-x-2">
         <Button
@@ -36,7 +36,7 @@ const LandingHeader = () => (
 const LandingFooter = () => (
   <footer className="py-10 bg-black/20 text-gray-300 text-center border-t border-gray-700">
     <div className="container mx-auto">
-      <p className="font-semibold">&copy; {new Date().getFullYear()} iKasi Tutoring.</p>
+      <p className="font-semibold">&copy; {new Date().getFullYear()} ITM Academy.</p>
       <p className="text-sm mt-1">Empowering Students, One Lesson at a Time.</p>
     </div>
   </footer>
@@ -67,7 +67,7 @@ export default function LandingPage() {
     {
       icon: <MessageSquare size={32} className="text-white" />,
       title: "Valuable Feedback Loop",
-      description: "Share your thoughts on lessons through short feedback forms. Your input helps us make iKasi Tutoring even better for everyone!",
+      description: "Share your thoughts on lessons through short feedback forms. Your input helps us make ITM Academy even better for everyone!",
     },
     {
       icon: <ShieldCheck size={32} className="text-white" />,
@@ -87,7 +87,7 @@ export default function LandingPage() {
               Unlock Your Academic Potential
             </h1>
             <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-3xl mx-auto leading-relaxed">
-              iKasi Tutoring is your personalized learning companion for Grade 12 Mathematics and Physics. Experience interactive lessons, AI-powered support, and seamless progress tracking.
+              ITM Academy is your personalized learning companion for Grade 12 Mathematics and Physics. Experience interactive lessons, AI-powered support, and seamless progress tracking.
             </p>
             <Button asChild size="lg" className="bg-white text-[#103452] hover:bg-gray-200 px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link href="/dashboard">Start Your Journey</Link>
@@ -96,7 +96,7 @@ export default function LandingPage() {
               <div className="aspect-[1000/500] relative overflow-hidden rounded-xl shadow-2xl border border-gray-700">
                 <Image
                   src="/hero-section.jpg"
-                  alt="iKasi Tutoring Platform Preview"
+                  alt="ITM Academy Platform Preview"
                   fill
                   style={{objectFit:"cover"}}
                   priority
@@ -110,7 +110,7 @@ export default function LandingPage() {
         <section id="features" className="py-16 md:py-24 bg-[#103452]">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
-              Why Choose iKasi Tutoring?
+              Why Choose ITM Academy?
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
               {features.map((feature, index) => (
@@ -133,7 +133,7 @@ export default function LandingPage() {
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Elevate Your Learning?</h2>
             <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto">
-              Join iKasi Tutoring today and take the first step towards mastering Mathematics and Physics. Your personalized dashboard awaits!
+              Join ITM Academy today and take the first step towards mastering Mathematics and Physics. Your personalized dashboard awaits!
             </p>
             <Button asChild size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/50 hover:border-white px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link href="/dashboard">Get Started Now</Link>

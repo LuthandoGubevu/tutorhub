@@ -42,7 +42,6 @@ export default function LoginPage() {
       // role fetching and redirection.
       toast({ title: "Processing Login", description: "Please wait..." });
     } catch (error: any) {
-      // console.error("Login page error:", error); // Removed this line
       let errorMessage = "Login failed. Please check your credentials.";
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         errorMessage = "Invalid email or password.";
@@ -82,7 +81,7 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary to-accent p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Welcome to iKasi Tutoring</CardTitle>
+          <CardTitle className="text-3xl font-bold">Welcome to ITM Academy</CardTitle>
           <CardDescription className="text-md">Please sign in to continue</CardDescription>
         </CardHeader>
         <CardContent>

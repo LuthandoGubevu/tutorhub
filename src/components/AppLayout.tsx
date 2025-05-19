@@ -44,7 +44,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const handleLogout = async () => {
     await logoutUser();
-    // router.push('/'); // AuthContext now handles redirection to landing page on logout
+    // AuthContext now handles redirection to landing page on logout
   };
   
   const filteredNavItems = navItems.filter(item => {
@@ -52,8 +52,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return item.role === userRole;
   });
 
-  if (isLoadingAuth || (!currentUser && pathname !== '/login')) { 
-    // Also show loading if redirecting due to no user
+  if (isLoadingAuth || (!currentUser && pathname !== '/login' && pathname !== '/')) { 
+    // Also show loading if redirecting due to no user, but not on landing page
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -62,18 +62,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
   
-  // If we reach here, user is authenticated or it's a page that doesn't strictly need currentUser (e.g. lesson listings)
-  // However, the useEffect above should have redirected if currentUser is null for pages using AppLayout.
-
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 h-screen w-64 bg-sidebar-background text-sidebar-foreground shadow-lg flex flex-col">
         <div className="p-6 flex items-center space-x-3 border-b border-sidebar-border">
           <Link href={userRole === 'tutor' ? "/tutor-dashboard" : "/dashboard"} className="flex items-center space-x-3 group">
             <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-              iK
+              IA
             </div>
-            <h1 className="text-xl font-semibold text-sidebar-foreground group-hover:text-sidebar-primary transition-colors">iKasi Tutoring</h1>
+            <h1 className="text-xl font-semibold text-sidebar-foreground group-hover:text-sidebar-primary transition-colors">ITM Academy</h1>
           </Link>
         </div>
         <ScrollArea className="flex-1">
@@ -107,7 +104,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <span>Logout</span>
             </Button>
           )}
-          <p className="text-xs text-sidebar-foreground/70 text-center">© {new Date().getFullYear()} iKasi Tutoring</p>
+          <p className="text-xs text-sidebar-foreground/70 text-center">© {new Date().getFullYear()} ITM Academy</p>
         </div>
       </aside>
       <main className="flex-1 p-6 lg:p-8 overflow-auto">

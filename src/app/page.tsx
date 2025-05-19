@@ -10,7 +10,7 @@ const LandingHeader = () => (
     <div className="container mx-auto flex justify-between items-center">
       <Link href="/" className="flex items-center space-x-3">
         <Image
-          src="/logo.png"
+          src="/logo-dark.jpg"
           alt="ITM Academy Logo"
           width={200}
           height={200}

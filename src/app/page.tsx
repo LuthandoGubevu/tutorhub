@@ -6,7 +6,7 @@ import { BookOpen, BarChartBig, CalendarCheck, Lightbulb, MessageSquare, ShieldC
 
 // Simple header component for landing page
 const LandingHeader = () => (
-  <header className="py-4 px-4 md:px-8 bg-[#103452] sticky top-0 z-50 border-b border-gray-700 shadow-sm">
+  <header className="py-4 px-4 md:px-8 bg-[#051d30] sticky top-0 z-50 border-b border-gray-700 shadow-sm">
     <div className="container mx-auto flex justify-between items-center">
       <Link href="/" className="flex items-center space-x-3">
         <Image
@@ -148,3 +148,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

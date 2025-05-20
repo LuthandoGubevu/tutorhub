@@ -45,7 +45,7 @@ body {
     --radius: 0.5rem;
 
     /* Sidebar specific theme */
-    --sidebar-background: 240 100% 25%; /* Navy Blue #000080 */
+    --sidebar-background: 207 86% 10%; /* Dark Navy Blue #031b2e */
     --sidebar-foreground: 0 0% 100%;   /* White text */
     
     --sidebar-primary: 208 54% 43%;    /* #3475a6, for active items in sidebar */
@@ -54,7 +54,7 @@ body {
     --sidebar-accent: 208 54% 43%;     /* #3475a6, Hover for non-active items - same as primary */
     --sidebar-accent-foreground: 0 0% 100%; /* White text */
     
-    --sidebar-border: 240 100% 30%;    /* Slightly lighter Navy for border */
+    --sidebar-border: 207 80% 15%;    /* Slightly lighter Navy for border */
     --sidebar-ring: 208 54% 43%;       /* #3475a6 for focus rings in sidebar */
   }
 
@@ -94,7 +94,7 @@ body {
     --chart-5: 340 75% 55%;
 
     /* Dark Sidebar specific theme */
-    --sidebar-background: 240 100% 25%; /* Navy Blue #000080 */
+    --sidebar-background: 207 86% 10%; /* Dark Navy Blue #031b2e */
     --sidebar-foreground: 0 0% 100%;   /* White text */
     
     --sidebar-primary: 208 54% 43%;    /* #3475a6, for active items in sidebar */
@@ -103,7 +103,7 @@ body {
     --sidebar-accent: 208 54% 43%;     /* #3475a6, Hover for non-active items - same as primary */
     --sidebar-accent-foreground: 0 0% 100%; /* White text */
     
-    --sidebar-border: 240 100% 30%; /* Slightly lighter Navy for border */
+    --sidebar-border: 207 80% 15%; /* Slightly lighter Navy for border */
     --sidebar-ring: 208 54% 43%; 
   }
 }
@@ -116,4 +116,3 @@ body {
     @apply bg-background text-foreground;
   }
 }
-

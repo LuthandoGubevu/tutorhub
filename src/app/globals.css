@@ -46,13 +46,13 @@ body {
 
     /* Sidebar specific theme */
     --sidebar-background: 240 100% 25%; /* Standard Navy Blue #000080 */
-    --sidebar-foreground: 0 0% 100%;   /* White text */
+    --sidebar-foreground: 207 86% 10%;   /* #031b2e text */
     
     --sidebar-primary: 208 54% 43%;    /* #3475a6, for active items in sidebar */
-    --sidebar-primary-foreground: 0 0% 100%; /* White text */
+    --sidebar-primary-foreground: 207 86% 10%; /* #031b2e text */
     
     --sidebar-accent: 208 54% 43%;     /* #3475a6, Hover for non-active items - same as primary */
-    --sidebar-accent-foreground: 0 0% 100%; /* White text */
+    --sidebar-accent-foreground: 207 86% 10%; /* #031b2e text */
     
     --sidebar-border: 240 100% 30%;    /* Slightly lighter Navy for border */
     --sidebar-ring: 208 54% 43%;       /* #3475a6 for focus rings in sidebar */
@@ -95,13 +95,13 @@ body {
 
     /* Dark Sidebar specific theme */
     --sidebar-background: 240 100% 25%; /* Standard Navy Blue #000080 */
-    --sidebar-foreground: 0 0% 100%;   /* White text */
+    --sidebar-foreground: 207 86% 10%;   /* #031b2e text */
     
     --sidebar-primary: 208 54% 43%;    /* #3475a6, for active items in sidebar */
-    --sidebar-primary-foreground: 0 0% 100%; /* White text */
+    --sidebar-primary-foreground: 207 86% 10%; /* #031b2e text */
     
     --sidebar-accent: 208 54% 43%;     /* #3475a6, Hover for non-active items - same as primary */
-    --sidebar-accent-foreground: 0 0% 100%; /* White text */
+    --sidebar-accent-foreground: 207 86% 10%; /* #031b2e text */
     
     --sidebar-border: 240 100% 30%; /* Slightly lighter Navy for border */
     --sidebar-ring: 208 54% 43%; 

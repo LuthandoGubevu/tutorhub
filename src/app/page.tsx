@@ -10,7 +10,7 @@ const LandingHeader = () => (
     <div className="container mx-auto flex justify-between items-center">
       <Link href="/" className="flex items-center space-x-3">
         <Image
-          src="/logo-dark.jpg"
+          src="/tutorhub-logo.png"
           alt="TutorHub Online Academy Logo"
           width={150} 
           height={45}

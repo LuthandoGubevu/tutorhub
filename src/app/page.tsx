@@ -12,8 +12,8 @@ const LandingHeader = () => (
         <Image
           src="/tutorhub-logo.png"
           alt="TutorHub Online Academy Logo"
-          width={150} 
-          height={45}
+          width={200} 
+          height={60}
         />
       </Link>
       <nav className="space-x-2">

@@ -48,7 +48,7 @@ export default function LoginPage() {
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = "Please enter a valid email address.";
       }
-      // console.error("Login page error:", error); // Console log the actual error for debugging
+      // console.error("Login page error:", error); 
       toast({ title: "Login Error", description: errorMessage, variant: "destructive" });
     } finally {
       // Ensures the button is re-enabled if the user remains on the login page
@@ -82,7 +82,7 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary to-accent p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Welcome to E-Tutor Academy</CardTitle>
+          <CardTitle className="text-3xl font-bold">Welcome to TutorHub Online Academy</CardTitle>
           <CardDescription className="text-md">Please sign in to continue</CardDescription>
         </CardHeader>
         <CardContent>

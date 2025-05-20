@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'E-Tutor Academy - Personalized Learning Platform',
-  description: 'Interactive learning platform for Grade 12 Mathematics and Physics. AI-assisted tutoring, progress tracking, and session booking.',
+  title: 'TutorHub Online Academy - Personalized Learning Platform',
+  description: 'Interactive learning platform for Grade 12 Mathematics and Physics. AI-assisted tutoring, progress tracking, and session booking with TutorHub Online Academy.',
 };
 
 export default function RootLayout({

@@ -16,8 +16,8 @@ interface StudentDataContextType {
 
 const StudentDataContext = createContext<StudentDataContextType | undefined>(undefined);
 
-const SUBMITTED_WORK_STORAGE_KEY = 'eTutorAcademy_submittedWork_v1';
-const BOOKINGS_STORAGE_KEY = 'eTutorAcademy_bookings_v1';
+const SUBMITTED_WORK_STORAGE_KEY = 'tutorHubOnlineAcademy_submittedWork_v1';
+const BOOKINGS_STORAGE_KEY = 'tutorHubOnlineAcademy_bookings_v1';
 
 // Helper to assign a mock score if work is reviewed
 const assignMockScoreIfNeeded = (work: SubmittedWork): SubmittedWork => {

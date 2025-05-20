@@ -67,7 +67,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <Link href={userRole === 'tutor' ? "/tutor-dashboard" : "/dashboard"} className="flex items-center group w-full">
             <Image
               src="/logo.png"
-              alt="E-Tutor Academy Logo"
+              alt="TutorHub Online Academy Logo"
               width={150} 
               height={45} 
               className="rounded-md" 
@@ -107,7 +107,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <span>Logout</span>
             </Button>
           )}
-          <p className="text-xs text-sidebar-foreground/70 text-center">© {new Date().getFullYear()} E-Tutor Academy</p>
+          <p className="text-xs text-sidebar-foreground/70 text-center">© {new Date().getFullYear()} TutorHub Online Academy</p>
         </div>
       </aside>
       <main className="flex-1 p-6 lg:p-8 overflow-auto">

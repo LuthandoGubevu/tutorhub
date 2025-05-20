@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ITM Academy - Personalized Learning Platform',
+  title: 'E-Tutor Academy - Personalized Learning Platform',
   description: 'Interactive learning platform for Grade 12 Mathematics and Physics. AI-assisted tutoring, progress tracking, and session booking.',
 };
 

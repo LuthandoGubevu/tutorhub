@@ -42,7 +42,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const handleLogout = async () => {
     await logoutUser();
-    // AuthContext now handles redirection to landing page on logout
+    router.replace('/'); // Redirect to landing page on logout
   };
   
   const filteredNavItems = navItems.filter(item => {
@@ -67,12 +67,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <Link href={userRole === 'tutor' ? "/tutor-dashboard" : "/dashboard"} className="flex items-center group w-full">
             <Image
               src="/logo.png"
-              alt="ITM Academy Logo"
-              width={150} // Adjusted for sidebar - you can fine-tune this
-              height={45}  // Adjusted for sidebar - and this, maintaining aspect ratio
-              className="rounded-md" // If your logo file has transparency and needs rounding, or is already rounded.
+              alt="E-Tutor Academy Logo"
+              width={150} 
+              height={45} 
+              className="rounded-md" 
             />
-            {/* Title removed to match landing page header */}
           </Link>
         </div>
         <ScrollArea className="flex-1">
@@ -108,7 +107,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <span>Logout</span>
             </Button>
           )}
-          <p className="text-xs text-sidebar-foreground/70 text-center">© {new Date().getFullYear()} ITM Academy</p>
+          <p className="text-xs text-sidebar-foreground/70 text-center">© {new Date().getFullYear()} E-Tutor Academy</p>
         </div>
       </aside>
       <main className="flex-1 p-6 lg:p-8 overflow-auto">

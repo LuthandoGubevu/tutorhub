@@ -83,7 +83,7 @@ export default function LandingPage() {
       <LandingHeader />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-b from-[#103452] via-primary/5 to-[#103452]">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-[#103452] via-primary/5 to-[#103452]">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-white tracking-tight">
               Unlock Your Academic Potential
@@ -109,7 +109,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-16 md:py-24 bg-[#103452]">
+        <section id="features" className="py-12 md:py-20 bg-[#103452]">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
               Why Choose TutorHub Online Academy?
@@ -131,7 +131,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-br from-[#3475a6] to-[#103452] text-white">
+        <section className="py-16 md:py-24 bg-gradient-to-br from-[#3475a6] to-[#103452] text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Elevate Your Learning?</h2>
             <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto">
@@ -147,3 +147,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

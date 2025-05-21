@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { BookOpen, BarChartBig, CalendarCheck, Lightbulb, MessageSquare, ShieldCheck } from 'lucide-react';
+import { BookOpen, BarChartBig, CalendarCheck, Lightbulb, MessageSquare, ShieldCheck, CheckCircle, Zap } from 'lucide-react';
 
 // Simple header component for landing page
 const LandingHeader = () => (
@@ -78,6 +78,49 @@ export default function LandingPage() {
     }
   ];
 
+  const pricingPlans = [
+    {
+      name: "1 Subject Plan",
+      monthlyPrice: "R300",
+      yearlyPrice: "R3,200",
+      yearlySavings: "",
+      features: [
+        "Access to Mathematics or Physics",
+        "96 lessons per year (8/month)",
+        "Weekly tutor feedback",
+        "Submit and track answers",
+        "Book 15-min 1:1 sessions",
+        "Personalized dashboard",
+      ],
+      note: "Ideal for students focused on improving one subject.",
+      ctaText: "Get Started",
+      bgColor: "bg-[#3475a6]",
+      textColor: "text-white",
+      borderColor: "border-gray-700/50",
+      badge: null,
+    },
+    {
+      name: "2 Subjects Plan",
+      monthlyPrice: "R600",
+      yearlyPrice: "R4,500",
+      yearlySavings: "Normally R7,200/year",
+      features: [
+        "Full access to Mathematics and Physics",
+        "192 lessons per year (8 per subject, per month)",
+        "Priority tutor responses",
+        "Book 15-min 1:1 sessions in both subjects",
+        "AI-enhanced feedback and performance tracking",
+        "Tutor insights dashboard",
+      ],
+      note: "Best value for students ready to master both subjects.",
+      ctaText: "Choose Plan",
+      bgColor: "bg-green-600", // Using green as per prompt for 2 subject plan
+      textColor: "text-white",
+      borderColor: "border-green-700/50",
+      badge: { text: "🎉 Launch Special! Save R2,700", color: "bg-yellow-400 text-black" },
+    },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-[#103452] text-white antialiased">
       <LandingHeader />
@@ -130,6 +173,57 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Pricing Section */}
+        <section id="pricing" className="py-16 md:py-24 bg-[#103452]">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
+              Flexible Plans for Every Student
+            </h2>
+            <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+              {pricingPlans.map((plan, index) => (
+                <div
+                  key={index}
+                  className={`rounded-xl shadow-2xl flex flex-col p-8 relative ${plan.bgColor} ${plan.textColor} border ${plan.borderColor}`}
+                >
+                  {plan.badge && (
+                    <div className={`absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 px-4 py-1.5 text-sm font-semibold rounded-full shadow-md ${plan.badge.color}`}>
+                      {plan.badge.text}
+                    </div>
+                  )}
+                  <h3 className="text-3xl font-bold mb-2 text-center">{plan.name}</h3>
+                  <p className="text-4xl font-extrabold text-center mb-1">
+                    {plan.monthlyPrice}<span className="text-xl font-normal">/month</span>
+                  </p>
+                  <p className="text-center text-sm opacity-80 mb-6">
+                    or {plan.yearlyPrice}/year {plan.yearlySavings && `(${plan.yearlySavings})`}
+                  </p>
+                  
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    {plan.features.map((feature, fIndex) => (
+                      <li key={fIndex} className="flex items-start">
+                        <CheckCircle size={20} className="mr-3 mt-0.5 shrink-0 opacity-90" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-sm opacity-80 mb-8 text-center italic">{plan.note}</p>
+                  <Button
+                    asChild
+                    size="lg"
+                    className={`w-full text-lg py-3 ${
+                      plan.name === "1 Subject Plan" 
+                        ? "bg-white text-[#103452] hover:bg-gray-200" 
+                        : "bg-white/90 text-green-700 hover:bg-white"
+                    } shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}
+                  >
+                    <Link href="/dashboard">{plan.ctaText}</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-16 md:py-24 bg-gradient-to-br from-[#3475a6] to-[#103452] text-white">
           <div className="container mx-auto px-4 text-center">
@@ -148,3 +242,5 @@ export default function LandingPage() {
   );
 }
 
+
+    

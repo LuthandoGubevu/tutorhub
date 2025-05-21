@@ -82,11 +82,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 h-screen w-64 bg-sidebar-background text-sidebar-foreground shadow-lg flex flex-col">
+      <aside className="sticky top-0 h-screen w-64 bg-sidebar text-sidebar-foreground shadow-lg flex flex-col">
         <div className="p-4 flex items-center border-b border-sidebar-border">
           <Link href={userRole === 'tutor' ? "/tutor-dashboard" : "/dashboard"} className="flex items-center group w-full">
             <Image
-              src="/logo.png"
+              src="/tutorhub-logo-dark.png" // Updated logo
               alt="TutorHub Online Academy Logo"
               width={150} 
               height={45} 

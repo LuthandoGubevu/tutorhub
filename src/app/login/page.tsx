@@ -23,8 +23,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoadingAuth && currentUser) {
-      // If user is already logged in and auth is not loading, redirect
-      // AuthContext also handles redirection, this is a fallback for direct navigation to /login
       if (currentUser.role === 'tutor') {
         router.replace('/tutor-dashboard');
       } else {
@@ -38,8 +36,6 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await loginUser(email, password);
-      // If loginUser succeeds, onAuthStateChanged in AuthContext will handle
-      // role fetching and redirection.
       toast({ title: "Processing Login", description: "Please wait..." });
     } catch (error: any) {
       let errorMessage = "Login failed. Please check your credentials.";
@@ -48,11 +44,9 @@ export default function LoginPage() {
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = "Please enter a valid email address.";
       }
-      // console.error("Login page error:", error); 
+      // console.error("Login page error:", error); // Removed this line
       toast({ title: "Login Error", description: errorMessage, variant: "destructive" });
     } finally {
-      // Ensures the button is re-enabled if the user remains on the login page
-      // for any reason after the login attempt (e.g., network error during role fetch after auth success but before redirect).
       setIsSubmitting(false);
     }
   };
@@ -66,8 +60,6 @@ export default function LoginPage() {
     );
   }
   
-  // If user is already logged in (and not loading), they will be redirected by useEffect or AuthContext.
-  // This prevents flicker of the login form.
   if (currentUser) {
      return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary to-accent p-4">
@@ -124,3 +116,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

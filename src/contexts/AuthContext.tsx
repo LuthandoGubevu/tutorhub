@@ -7,7 +7,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, db } from '@/lib/firebase'; // Import Firebase instances
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User as FirebaseUserType } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { useRouter, usePathname } from 'next/navigation'; // Import usePathname
+import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
   currentUser: AuthUserType | null;
@@ -39,15 +39,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
           if (firebaseUser.email === TUTOR_EMAIL_ADDRESS) {
             resolvedRole = 'tutor';
-            // Attempt to get displayName from Firestore for consistency, even for the tutor
             const userDocRefTutor = doc(db, 'users', firebaseUser.uid);
-            const userDocTutor = await getDoc(userDocTutor);
+            const userDocTutor = await getDoc(userDocRefTutor);
             if (userDocTutor.exists() && userDocTutor.data()?.displayName) {
               resolvedDisplayName = userDocTutor.data()?.displayName;
             }
              console.log(`User with email ${firebaseUser.email} assigned 'tutor' role based on hardcoded email.`);
           } else {
-            // For all other emails, fetch role from Firestore, default to 'student' if not found
             const userDocRef = doc(db, 'users', firebaseUser.uid);
             const userDoc = await getDoc(userDocRef);
             
@@ -56,15 +54,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               if (userDataFromFirestore.role) {
                 resolvedRole = userDataFromFirestore.role;
               } else {
-                console.warn(`Firestore document for UID ${firebaseUser.uid} exists but is missing the 'role' field. Defaulting to 'student'. Please define roles explicitly in Firestore for production.`);
-                resolvedRole = 'student'; // Default to student
+                console.warn(`Firestore document for UID ${firebaseUser.uid} exists but is missing the 'role' field. Defaulting to 'student' role for this session. Please define roles explicitly in Firestore for production.`);
+                resolvedRole = 'student'; 
               }
               if (userDataFromFirestore.displayName) {
                 resolvedDisplayName = userDataFromFirestore.displayName;
               }
             } else {
-              console.warn(`Firestore document not found for UID ${firebaseUser.uid}. Defaulting to 'student' role as not the designated tutor email. Please create user documents with roles in Firestore for production or if specific non-tutor roles are needed.`);
-              resolvedRole = 'student'; // Default to student
+              console.warn(`Firestore document not found for UID ${firebaseUser.uid}. Defaulting to 'student' role for this session as not the designated tutor email. Please create user documents with roles in Firestore for production.`);
+              resolvedRole = 'student'; 
             }
           }
 
@@ -84,14 +82,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               } else if (appUser.role === 'student') {
                 router.replace('/dashboard');
               } else {
-                // Should not happen with the default logic, but as a fallback
                 console.warn("User authenticated but role could not be determined, redirecting to landing.");
                 router.replace('/'); 
               }
           }
         } catch (error) {
           console.error("Error fetching user role from Firestore or processing user data:", error);
-           console.warn(`Error during role processing for UID ${firebaseUser.uid}. Defaulting to 'student' role. Review Firestore setup.`, error);
            const appUserOnError: AuthUserType = {
              uid: firebaseUser.uid,
              email: firebaseUser.email,
@@ -100,7 +96,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
            };
           setCurrentUser(appUserOnError);
           setUserRole('student');
-          if (pathname === '/login') router.replace('/dashboard'); // Redirect to student dashboard
+          if (pathname === '/login') router.replace('/dashboard'); 
         }
       } else {
         setCurrentUser(null);
@@ -122,8 +118,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await signInWithEmailAndPassword(auth, email, pass);
       // onAuthStateChanged will handle setting user, role, and redirection
     } catch (error) {
-      setIsLoadingAuth(false); // Ensure loading is false on login error
-      throw error; // Error is re-thrown to be handled by the calling page
+      setIsLoadingAuth(false); 
+      throw error; 
     }
   };
 
@@ -132,11 +128,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await signOut(auth);
       // setCurrentUser and setUserRole will be handled by onAuthStateChanged
+      // Redirection to '/' is handled by onAuthStateChanged when user becomes null and is on a protected route.
+      // Explicit redirect if needed after signOut if current page isn't automatically handled:
+      router.replace('/');
     } catch (error) {
       console.error("Logout failed:", error);
-    } finally {
-       // onAuthStateChanged will set isLoadingAuth to false after processing logout
     }
+    // onAuthStateChanged will eventually set isLoadingAuth to false.
   };
 
   return (
@@ -153,4 +151,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

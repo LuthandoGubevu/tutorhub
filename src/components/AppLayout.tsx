@@ -3,11 +3,11 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, Sigma, Atom, CalendarDays, ShieldCheck, LogOut, Loader2 } from 'lucide-react'; // Adjusted imports
+import { LayoutDashboard, Sigma, Atom, CalendarDays, ShieldCheck, LogOut, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import Image from 'next/image'; // Import next/image
+import Image from 'next/image'; 
 import { useAuth } from '@/contexts/AuthContext'; 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -33,16 +33,21 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // If auth is not loading, and there's no user, AND we are not on public pages, redirect to login.
     if (!isLoadingAuth && !currentUser && pathname !== '/login' && pathname !== '/') {
-      console.log(`AppLayout: No user, on ${pathname}, redirecting to /login`);
-      router.replace('/login');
+      // Check if the current path is one of the protected base paths or starts with them
+      const protectedBasePaths = ['/dashboard', '/tutor-dashboard', '/mathematics', '/physics', '/book-session'];
+      if (protectedBasePaths.some(basePath => pathname.startsWith(basePath))) {
+        console.log(`AppLayout: No user, on protected path ${pathname}, redirecting to /login`);
+        router.replace('/login');
+      }
     }
   }, [isLoadingAuth, currentUser, pathname, router]);
 
 
   const handleLogout = async () => {
     await logoutUser();
-    router.replace('/'); // Redirect to landing page on logout
+    // The redirection to '/' is now handled by AuthContext on logout.
   };
   
   const filteredNavItems = navItems.filter(item => {
@@ -50,8 +55,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return item.role === userRole;
   });
 
-  // Show loading state until auth status and user role are confirmed
-  if (isLoadingAuth || (!currentUser && pathname !== '/login' && pathname !== '/')) { 
+  // Show loading state until auth status and user role are confirmed,
+  // but only if we are on a path that is NOT /login or / (landing page).
+  // This prevents the loader from showing on public pages before auth state is known.
+  const shouldShowLoader = isLoadingAuth && pathname !== '/login' && pathname !== '/';
+
+  if (shouldShowLoader) { 
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -60,6 +69,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
   
+  // If not loading and no user, but trying to access a page that uses AppLayout (and isn't /login or /),
+  // the useEffect above should have redirected. This is a fallback display.
+  if (!currentUser && pathname !== '/login' && pathname !== '/' && ['/dashboard', '/tutor-dashboard', '/mathematics', '/physics', '/book-session'].some(p => pathname.startsWith(p))) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-foreground">Redirecting to login...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 h-screen w-64 bg-sidebar-background text-sidebar-foreground shadow-lg flex flex-col">
@@ -116,3 +136,4 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+

@@ -2,9 +2,9 @@
 "use client";
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation'; // Corrected import for App Router
+import { useRouter } from 'next/navigation'; 
 import { useEffect, type ReactNode } from 'react';
-import AppLayout from '@/components/AppLayout'; // Assuming tutors use a similar layout
+import AppLayout from '@/components/AppLayout'; 
 import { Loader2 } from 'lucide-react';
 
 export default function TutorDashboardLayout({ children }: { children: ReactNode }) {
@@ -18,9 +18,9 @@ export default function TutorDashboardLayout({ children }: { children: ReactNode
         router.replace('/login');
       } else if (userRole !== 'tutor') {
         console.log(`TutorLayout: User is not a tutor (role: ${userRole}), redirecting to /dashboard`);
-        router.replace('/dashboard'); // Redirect non-tutors
+        router.replace('/dashboard'); 
       } else {
-        console.log("TutorLayout: User is tutor, access granted.");
+        // console.log("TutorLayout: User is tutor, access granted."); // Optional: for debugging
       }
     }
   }, [currentUser, userRole, isLoadingAuth, router]);
@@ -35,8 +35,6 @@ export default function TutorDashboardLayout({ children }: { children: ReactNode
   }
 
   if (!currentUser || userRole !== 'tutor') {
-    // This content will be briefly shown while router.replace takes effect.
-    // Or if redirection somehow fails.
     return (
        <div className="flex flex-col items-center justify-center min-h-screen text-center p-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -45,6 +43,6 @@ export default function TutorDashboardLayout({ children }: { children: ReactNode
     );
   }
 
-  // If role is 'tutor' and not loading, render the layout and children
   return <AppLayout>{children}</AppLayout>;
 }
+

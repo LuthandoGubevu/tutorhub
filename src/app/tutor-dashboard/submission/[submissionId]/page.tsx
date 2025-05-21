@@ -9,8 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input'; // Import Input
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckSquare, Loader2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, CheckSquare, Loader2, MessageSquare, Percent } from 'lucide-react';
 import { format } from 'date-fns';
 import { updateSubmissionByTutorAction } from '@/lib/actions';
 import Link from 'next/link';
@@ -25,14 +26,16 @@ export default function SubmissionDetailPage() {
 
   const [submission, setSubmission] = useState<SubmittedWork | undefined>(undefined);
   const [tutorFeedback, setTutorFeedback] = useState('');
+  const [currentScore, setCurrentScore] = useState<string>(''); // State for score input
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (submissionId && submittedWork.length > 0) {
       const foundSubmission = submittedWork.find(s => s.id === submissionId);
       setSubmission(foundSubmission);
-      if (foundSubmission?.tutorFeedback) {
-        setTutorFeedback(foundSubmission.tutorFeedback);
+      if (foundSubmission) {
+        setTutorFeedback(foundSubmission.tutorFeedback || '');
+        setCurrentScore(foundSubmission.score !== undefined ? String(foundSubmission.score) : '');
       }
     }
   }, [submissionId, submittedWork]);
@@ -41,27 +44,47 @@ export default function SubmissionDetailPage() {
     if (!submission) return;
     setIsSubmitting(true);
 
-    // In a real app, you'd likely call a server action that updates Firestore.
-    // For the prototype, we'll call an action that simulates this and then update context.
+    let scoreToSave: number | undefined = undefined;
+    if (currentScore.trim() !== '') {
+      const parsedScore = parseFloat(currentScore);
+      if (!isNaN(parsedScore) && parsedScore >= 0 && parsedScore <= 100) {
+        scoreToSave = parsedScore;
+      } else {
+        toast({
+          title: "Invalid Score",
+          description: "Score must be a number between 0 and 100.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const result = await updateSubmissionByTutorAction(
       submission.id, 
       tutorFeedback, 
       'Reviewed',
-      submittedWork // Pass current submissions for the action to find and "update"
+      scoreToSave, // Pass the score
+      submittedWork 
     );
 
     if (result.success && result.updatedSubmission) {
-      // Update the context with the result from the action
       updateContextSubmission(submission.id, result.updatedSubmission);
-      setSubmission(result.updatedSubmission); // Update local state for immediate UI reflect
+      setSubmission(result.updatedSubmission); 
+      if (result.updatedSubmission.tutorFeedback) {
+        setTutorFeedback(result.updatedSubmission.tutorFeedback);
+      }
+      if (result.updatedSubmission.score !== undefined) {
+        setCurrentScore(String(result.updatedSubmission.score));
+      }
       toast({
-        title: "Feedback Saved",
-        description: "The submission has been marked as reviewed and feedback saved.",
+        title: "Feedback & Score Saved",
+        description: "The submission has been marked as reviewed, and feedback/score saved.",
       });
     } else {
       toast({
         title: "Error",
-        description: result.error || "Could not save feedback.",
+        description: result.error || "Could not save feedback and score.",
         variant: "destructive",
       });
     }
@@ -77,6 +100,10 @@ export default function SubmissionDetailPage() {
     );
   }
 
+  const isAlreadyReviewed = submission.status === 'Reviewed';
+  const isSaveDisabled = isSubmitting || (isAlreadyReviewed && tutorFeedback === submission.tutorFeedback && (currentScore === String(submission.score) || (currentScore === '' && submission.score === undefined)));
+
+
   return (
     <div className="space-y-6">
       <Button variant="outline" onClick={() => router.back()} className="mb-4">
@@ -91,7 +118,9 @@ export default function SubmissionDetailPage() {
             Student ID: {submission.studentId} <br />
             Submitted: {format(new Date(submission.submittedAt), "PPPp")} <br />
             Status: <span className={`font-semibold ${submission.status === 'Reviewed' ? 'text-green-600' : 'text-orange-500'}`}>{submission.status}</span>
-            {submission.score && ` (Score: ${submission.score}%)`}
+            {submission.score !== undefined && (
+              <span className="ml-2">(Score: <span className="font-bold">{submission.score}%</span>)</span>
+            )}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -118,11 +147,11 @@ export default function SubmissionDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center"><MessageSquare size={20} className="mr-2 text-primary"/> Provide Feedback</CardTitle>
-          <CardDescription>Enter your feedback for the student below. This will be visible to them once saved.</CardDescription>
+          <CardTitle className="flex items-center"><MessageSquare size={20} className="mr-2 text-primary"/> Provide Feedback & Grade</CardTitle>
+          <CardDescription>Enter your feedback and a score (0-100) for the student below.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
+        <CardContent className="space-y-4">
+          <div>
             <Label htmlFor="tutorFeedback">Your Feedback</Label>
             <Textarea
               id="tutorFeedback"
@@ -130,18 +159,32 @@ export default function SubmissionDetailPage() {
               onChange={(e) => setTutorFeedback(e.target.value)}
               placeholder="Enter your constructive feedback here..."
               className="min-h-[150px]"
-              disabled={submission.status === 'Reviewed' && !isSubmitting} // Optionally disable if already reviewed
+              disabled={isSubmitting && !isAlreadyReviewed} 
+            />
+          </div>
+          <div>
+            <Label htmlFor="submissionScore">Score (0-100)</Label>
+            <Input
+              id="submissionScore"
+              type="number"
+              min="0"
+              max="100"
+              value={currentScore}
+              onChange={(e) => setCurrentScore(e.target.value)}
+              placeholder="Enter score"
+              className="w-full md:w-1/3"
+              disabled={isSubmitting && !isAlreadyReviewed}
             />
           </div>
         </CardContent>
         <CardFooter>
           <Button 
             onClick={handleSaveFeedback} 
-            disabled={isSubmitting || (submission.status === 'Reviewed' && tutorFeedback === submission.tutorFeedback)}
+            disabled={isSaveDisabled}
             className="bg-accent hover:bg-accent/90"
           >
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckSquare size={16} className="mr-2" />}
-            {submission.status === 'Reviewed' && tutorFeedback === submission.tutorFeedback ? 'Feedback Saved' : (submission.status === 'Reviewed' ? 'Update Feedback' : 'Mark as Reviewed & Save')}
+            {isAlreadyReviewed && !isSaveDisabled ? 'Update Feedback/Score' : (isAlreadyReviewed ? 'Feedback & Score Saved' : 'Mark as Reviewed & Save')}
           </Button>
         </CardFooter>
       </Card>

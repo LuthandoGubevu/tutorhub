@@ -4,7 +4,7 @@
 import type { SubmittedWork, Booking, Lesson } from '@/types';
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mathematicsLessons, physicsLessons } from '@/lib/data'; // Import lessons for score mocking
+import { mathematicsLessons, physicsLessons } from '@/lib/data'; 
 
 interface StudentDataContextType {
   submittedWork: SubmittedWork[];
@@ -19,12 +19,15 @@ const StudentDataContext = createContext<StudentDataContextType | undefined>(und
 const SUBMITTED_WORK_STORAGE_KEY = 'tutorHubOnlineAcademy_submittedWork_v1';
 const BOOKINGS_STORAGE_KEY = 'tutorHubOnlineAcademy_bookings_v1';
 
-// Helper to assign a mock score if work is reviewed
+// This function is now less relevant for updates as scores are explicitly set by tutors.
+// It can be kept for initial mock data or if a default score is needed on creation under specific conditions.
+// For now, score assignment on initial 'Reviewed' status is removed.
 const assignMockScoreIfNeeded = (work: SubmittedWork): SubmittedWork => {
-  if (work.status === 'Reviewed' && typeof work.score === 'undefined') {
-    // Assign a random score between 60 and 100 for reviewed items if no score exists
-    return { ...work, score: Math.floor(Math.random() * 41) + 60 };
-  }
+  // Example: Only assign mock score if it's a new submission somehow marked 'Reviewed' and has no score.
+  // This scenario is unlikely with current flow. Tutors explicitly set scores.
+  // if (work.status === 'Reviewed' && typeof work.score === 'undefined') {
+  //   return { ...work, score: Math.floor(Math.random() * 41) + 60 };
+  // }
   return work;
 };
 
@@ -35,13 +38,12 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
       const storedWork = localStorage.getItem(SUBMITTED_WORK_STORAGE_KEY);
       if (storedWork) {
         const parsedWork = JSON.parse(storedWork) as SubmittedWork[];
-        // Ensure lessons are correctly hydrated and scores are potentially assigned
         return parsedWork.map(work => {
           const lessonSet = work.lesson.subject === 'Mathematics' ? mathematicsLessons : physicsLessons;
           const fullLesson = lessonSet.find(l => l.id === work.lesson.id) || work.lesson;
-          // Ensure studentId is present, assign mock if somehow missing from old data
           const workWithStudentId = { ...work, lesson: fullLesson, studentId: work.studentId || 'unknown_student' };
-          return assignMockScoreIfNeeded(workWithStudentId);
+          // We don't assign mock scores here anymore on load, existing scores will be preserved.
+          return workWithStudentId; 
         });
       }
       return [];
@@ -69,20 +71,17 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   }, [bookings]);
 
-  const addSubmittedWork = (newWork: SubmittedWork) => { // Parameter is now newWork
-    const workWithScore = assignMockScoreIfNeeded(newWork); // newWork already has studentId from submitAnswerAction
-    setSubmittedWork(prev => [workWithScore, ...prev.filter(p => p.id !== workWithScore.id)].sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
+  const addSubmittedWork = (newWork: SubmittedWork) => { 
+    // Score is not assigned on initial submission by student
+    setSubmittedWork(prev => [newWork, ...prev.filter(p => p.id !== newWork.id)].sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
   };
 
   const updateSubmittedWork = (workId: string, updates: Partial<SubmittedWork>) => {
     setSubmittedWork(prev => prev.map(work => {
       if (work.id === workId) {
-        let updatedWork = { ...work, ...updates };
-        // If status is being set to 'Reviewed' and no score exists, or if a score is explicitly passed in updates
-        if (updates.status === 'Reviewed' && typeof updatedWork.score === 'undefined') {
-             updatedWork = assignMockScoreIfNeeded(updatedWork);
-        }
-        return updatedWork;
+        // Direct update, score comes from `updates` if provided by tutor.
+        // No automatic mock score assignment here.
+        return { ...work, ...updates };
       }
       return work;
     }).sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));

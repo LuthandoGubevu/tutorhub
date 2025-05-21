@@ -6,7 +6,7 @@ import type { StudentAnswer, LessonFeedback, Booking, Lesson, SubmittedWork } fr
 import { getLessonById } from './data';
 
 // Simulate student ID for now
-const MOCK_STUDENT_ID = "student123"; // This will be overridden by actual logged-in user if available
+// const MOCK_STUDENT_ID = "student123"; // This will be overridden by actual logged-in user if available - This line is no longer used
 
 interface SubmitAnswerResult {
   success: boolean;
@@ -32,15 +32,15 @@ export async function submitAnswerAction(
   }
   
   const timestamp = new Date().toISOString();
-  const studentAnswerData: StudentAnswer = {
-    lessonId,
-    studentId: studentId, // Use passed studentId
-    answer,
-    timestamp,
-  };
+  // const studentAnswerData: StudentAnswer = { // Not directly used for return anymore
+  //   lessonId,
+  //   studentId: studentId, 
+  //   answer,
+  //   timestamp,
+  // };
 
   // Log data that would be sent to the tutor
-  console.log("Answer submitted (simulated):", studentAnswerData);
+  // console.log("Answer submitted (simulated):", studentAnswerData); // Less relevant now
 
   // Call AI flow
   let aiSuggestion: string | undefined;
@@ -49,7 +49,7 @@ export async function submitAnswerAction(
       lessonContent: lesson.richTextContent,
       studentAnswer: answer,
       lessonId: lessonId,
-      studentId: studentId, // Use passed studentId
+      studentId: studentId, 
       timestamp: timestamp,
     };
     const aiOutput: SuggestFeedbackOutput = await suggestFeedback(aiInput);
@@ -63,17 +63,18 @@ export async function submitAnswerAction(
   const newSubmissionData: SubmittedWork = {
     id: `submission-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
     lesson: lesson,
-    studentId: studentId, // Ensure studentId is here
+    studentId: studentId, 
     studentAnswer: answer,
     submittedAt: timestamp,
     aiFeedbackSuggestion: aiSuggestion,
     status: 'Pending',
+    // Score is not set at initial submission
   };
   
   return { 
     success: true, 
     newSubmission: newSubmissionData,
-    aiFeedbackSuggestion: aiSuggestion // Retained for direct access if needed immediately after action
+    aiFeedbackSuggestion: aiSuggestion 
   };
 }
 
@@ -95,10 +96,7 @@ export async function submitLessonFeedbackAction(
     timestamp,
   };
 
-  // Log data that would be saved
   console.log("Lesson feedback submitted (simulated):", fullFeedbackData);
-  
-  // In a real app, save fullFeedbackData to Firestore
   return { success: true, feedback: fullFeedbackData };
 }
 
@@ -117,21 +115,17 @@ export async function bookSessionAction(
     ...bookingDetails,
     id: `booking-${Date.now()}-${Math.random().toString(36).substring(7)}`,
     studentId: studentId,
-    tutorId: "tutor456", // Mock tutor ID
-    googleMeetLink: `https://meet.google.com/lookup/mock-${Math.random().toString(36).substring(7)}`, // Mock Google Meet link
+    tutorId: "tutor456", 
+    googleMeetLink: `https://meet.google.com/lookup/mock-${Math.random().toString(36).substring(7)}`, 
     status: 'Confirmed', 
   };
 
-  // Log data that would be saved and used to create calendar events
   console.log("Session booked (simulated):", newBooking);
   console.log("Google Meet link generated (simulated):", newBooking.googleMeetLink);
-  
-  // In a real app, save newBooking to Firestore and use Google Calendar API
   return { success: true, booking: newBooking };
 }
 
 
-// Action for tutor to update submission (add feedback, change status)
 interface UpdateSubmissionResult {
   success: boolean;
   updatedSubmission?: SubmittedWork;
@@ -141,8 +135,9 @@ interface UpdateSubmissionResult {
 export async function updateSubmissionByTutorAction(
   submissionId: string,
   tutorFeedback: string,
-  newStatus: 'Reviewed' | 'Pending', // Tutors would likely only mark as 'Reviewed'
-  currentSubmissions: SubmittedWork[] // Pass current submissions to find and update
+  newStatus: 'Reviewed' | 'Pending',
+  score: number | undefined, // Added score parameter
+  currentSubmissions: SubmittedWork[] 
 ): Promise<UpdateSubmissionResult> {
   
   const submissionIndex = currentSubmissions.findIndex(s => s.id === submissionId);
@@ -156,14 +151,9 @@ export async function updateSubmissionByTutorAction(
     ...submissionToUpdate,
     tutorFeedback: tutorFeedback,
     status: newStatus,
-    score: newStatus === 'Reviewed' && typeof submissionToUpdate.score === 'undefined' 
-           ? (Math.floor(Math.random() * 41) + 60) // Assign mock score if reviewed and no score
-           : submissionToUpdate.score, 
+    score: score !== undefined ? score : submissionToUpdate.score, // Use provided score, or keep existing
   };
   
   console.log("Submission updated by tutor (simulated):", updatedSubmission);
-  // In a real app, update in Firestore.
-  // For prototype, this action helps structure what would be saved.
-  // The actual update to StudentDataContext will happen client-side after this action returns.
   return { success: true, updatedSubmission };
 }

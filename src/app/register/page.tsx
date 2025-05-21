@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { auth, db } from "@/lib/firebase"; // Import Firebase auth and db
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -46,38 +49,46 @@ export default function RegisterPage() {
       return;
     }
 
-    // Simulate API call / Firebase registration
-    console.log("Registration Details:", {
-      fullName,
-      email,
-      password, // In a real app, NEVER log passwords
-      cellNumber,
-    });
+    try {
+      // Step 1: Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    // Placeholder for actual registration logic
-    // try {
-    //   // const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    //   // const user = userCredential.user;
-    //   // await setDoc(doc(db, "users", user.uid), {
-    //   //   uid: user.uid,
-    //   //   fullName,
-    //   //   email,
-    //   //   cellNumber,
-    //   //   role: 'student', // Default role
-    //   //   createdAt: new Date().toISOString(),
-    //   // });
-    //   toast({ title: "Account Created!", description: "You can now log in." });
-    //   router.push('/login');
-    // } catch (error: any) {
-    //   toast({ title: "Registration Failed", description: error.message || "Could not create account.", variant: "destructive" });
-    // }
+      // Step 2: Create user document in Firestore
+      // IMPORTANT: Use user.uid as the document ID
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        fullName,
+        email,
+        cellNumber,
+        role: 'student', // Default role for new registrations
+        createdAt: new Date().toISOString(),
+      });
 
-    // For now, just show success and redirect (simulated)
-    setTimeout(() => {
-      toast({ title: "Registration Submitted (Simulated)", description: "Details logged to console. You would normally be redirected." });
-      // router.push('/login'); // Uncomment when actual registration is implemented
+      toast({ 
+        title: "Account Created!", 
+        description: "Registration successful. Please log in with your new credentials." 
+      });
+      router.push('/login'); // Redirect to login page
+
+    } catch (error: any) {
+      console.error("Registration Error:", error);
+      let errorMessage = "Could not create account. Please try again.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "This email address is already in use. Please try a different email or log in.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "The password is too weak. Please choose a stronger password (at least 6 characters).";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "The email address is not valid. Please enter a correct email.";
+      }
+      toast({ 
+        title: "Registration Failed", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -118,7 +129,7 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Minimum 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -131,7 +142,7 @@ export default function RegisterPage() {
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -150,7 +161,7 @@ export default function RegisterPage() {
                 disabled={isSubmitting}
               />
             </div>
-            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting}>
+            <Button type="submit" className="w-full text-lg py-3 bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
               Create Account
             </Button>

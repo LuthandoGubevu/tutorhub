@@ -34,7 +34,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // If auth is not loading, and there's no user, AND we are not on public pages, redirect to login.
-    if (!isLoadingAuth && !currentUser && pathname !== '/login' && pathname !== '/') {
+    if (!isLoadingAuth && !currentUser && pathname !== '/login' && pathname !== '/register' && pathname !== '/') {
       // Check if the current path is one of the protected base paths or starts with them
       const protectedBasePaths = ['/dashboard', '/tutor-dashboard', '/mathematics', '/physics', '/book-session'];
       if (protectedBasePaths.some(basePath => pathname.startsWith(basePath))) {
@@ -58,7 +58,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   // Show loading state until auth status and user role are confirmed,
   // but only if we are on a path that is NOT /login or / (landing page).
   // This prevents the loader from showing on public pages before auth state is known.
-  const shouldShowLoader = isLoadingAuth && pathname !== '/login' && pathname !== '/';
+  const shouldShowLoader = isLoadingAuth && pathname !== '/login' && pathname !== '/register' && pathname !== '/';
 
   if (shouldShowLoader) { 
     return (
@@ -71,7 +71,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   
   // If not loading and no user, but trying to access a page that uses AppLayout (and isn't /login or /),
   // the useEffect above should have redirected. This is a fallback display.
-  if (!currentUser && pathname !== '/login' && pathname !== '/' && ['/dashboard', '/tutor-dashboard', '/mathematics', '/physics', '/book-session'].some(p => pathname.startsWith(p))) {
+  if (!currentUser && pathname !== '/login' && pathname !== '/register' && pathname !== '/' && ['/dashboard', '/tutor-dashboard', '/mathematics', '/physics', '/book-session'].some(p => pathname.startsWith(p))) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -86,7 +86,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <div className="p-4 flex items-center border-b border-sidebar-border">
           <Link href={userRole === 'tutor' ? "/tutor-dashboard" : "/dashboard"} className="flex items-center group w-full">
             <Image
-              src="/tutorhub-logo-dark.png" // Updated logo
+              src="/tutorhub-logo.png" 
               alt="TutorHub Online Academy Logo"
               width={150} 
               height={45} 

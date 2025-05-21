@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { BookOpen, BarChartBig, CalendarCheck, Lightbulb, MessageSquare, ShieldCheck, CheckCircle, Zap } from 'lucide-react';
+import { BookOpen, BarChartBig, CalendarCheck, Lightbulb, MessageSquare, ShieldCheck, CheckCircle } from 'lucide-react';
 
 // Simple header component for landing page
 const LandingHeader = () => (
@@ -16,13 +16,18 @@ const LandingHeader = () => (
           height={60}
         />
       </Link>
-      <nav className="space-x-2">
-        <Button
-          asChild
-          className="bg-white/10 hover:bg-white/20 text-white border border-white/50 hover:border-white/80 rounded-md px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
-        >
-          <Link href="/login">Sign In</Link>
-        </Button>
+      <nav className="flex items-center space-x-4">
+        <div className="flex flex-col items-end">
+          <Button
+            asChild
+            className="bg-white/10 hover:bg-white/20 text-white border border-white/50 hover:border-white/80 rounded-md px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <Link href="/login">Sign In</Link>
+          </Button>
+          <Link href="/register" className="text-xs text-white/70 hover:text-white mt-1 underline">
+            Or Register
+          </Link>
+        </div>
         <Button
           asChild
           className="bg-white/10 hover:bg-white/20 text-white border border-white/50 hover:border-white/80 rounded-md px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
@@ -114,7 +119,7 @@ export default function LandingPage() {
       ],
       note: "Best value for students ready to master both subjects.",
       ctaText: "Choose Plan",
-      bgColor: "bg-green-600", // Using green as per prompt for 2 subject plan
+      bgColor: "bg-green-600",
       textColor: "text-white",
       borderColor: "border-green-700/50",
       badge: { text: "🎉 Launch Special! Save R2,700", color: "bg-yellow-400 text-black" },
@@ -241,6 +246,4 @@ export default function LandingPage() {
     </div>
   );
 }
-
-
     

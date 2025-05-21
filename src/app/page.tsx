@@ -17,23 +17,21 @@ const LandingHeader = () => (
         />
       </Link>
       <nav className="flex items-center space-x-4">
-        <div className="flex flex-col items-end">
-          <Button
-            asChild
-            className="bg-white/10 hover:bg-white/20 text-white border border-white/50 hover:border-white/80 rounded-md px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <Link href="/login">Sign In</Link>
-          </Button>
-          <Link href="/register" className="text-xs text-white/70 hover:text-white mt-1 underline">
-            Or Register
-          </Link>
-        </div>
+        <Button
+          asChild
+          className="bg-white/10 hover:bg-white/20 text-white border border-white/50 hover:border-white/80 rounded-md px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <Link href="/login">Sign In</Link>
+        </Button>
         <Button
           asChild
           className="bg-white/10 hover:bg-white/20 text-white border border-white/50 hover:border-white/80 rounded-md px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
         >
           <Link href="/dashboard">Get Started</Link>
         </Button>
+        <Link href="/register" className="text-sm text-white/70 hover:text-white hover:underline">
+          Or Register
+        </Link>
       </nav>
     </div>
   </header>
@@ -247,3 +245,4 @@ export default function LandingPage() {
   );
 }
     
+

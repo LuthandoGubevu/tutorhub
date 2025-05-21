@@ -1,7 +1,7 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { getAuth, type Auth, GoogleAuthProvider } from "firebase/auth"; // Added GoogleAuthProvider
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 
@@ -37,5 +37,4 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export { app, auth, db, analytics };
-
+export { app, auth, db, analytics, GoogleAuthProvider }; // Export GoogleAuthProvider

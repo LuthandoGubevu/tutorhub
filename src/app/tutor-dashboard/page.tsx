@@ -61,7 +61,7 @@ export default function TutorDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <Card className="shadow-lg bg-[#031b2e] text-primary-foreground">
+      <Card className="shadow-lg bg-[#103452] text-primary-foreground">
         <CardHeader>
           <CardTitle className="text-4xl font-bold flex items-center"><ListChecks size={40} className="mr-3"/>Tutor Dashboard</CardTitle>
           <CardDescription className="text-lg text-primary-foreground/90">

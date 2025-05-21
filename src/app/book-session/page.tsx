@@ -9,7 +9,7 @@ export default function BookSessionPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <Card className="shadow-lg bg-gradient-to-r from-primary to-accent text-primary-foreground">
+        <Card className="shadow-lg bg-[#103452] text-primary-foreground">
           <CardHeader>
             <CardTitle className="text-4xl font-bold flex items-center">
              <CalendarDays size={40} className="mr-3" /> Book a Tutoring Session

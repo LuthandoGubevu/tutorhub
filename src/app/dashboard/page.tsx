@@ -43,7 +43,7 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <Card className="shadow-lg bg-gradient-to-r from-primary to-accent text-primary-foreground">
+        <Card className="shadow-lg bg-[#103452] text-primary-foreground">
           <CardHeader className="flex flex-row justify-between items-start p-6">
             <div>
               <CardTitle className="text-4xl font-bold">
@@ -133,4 +133,3 @@ export default function DashboardPage() {
     </AppLayout>
   );
 }
-

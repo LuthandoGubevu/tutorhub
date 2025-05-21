@@ -13,8 +13,7 @@ export default function LessonCard({ lesson }: LessonCardProps) {
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold text-primary">{lesson.title}</CardTitle>
-        {/* CardDescription removed */}
+        <CardTitle className="text-xl font-semibold text-[#103452]">{lesson.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-xs text-muted-foreground">Subject: {lesson.subject}</p>

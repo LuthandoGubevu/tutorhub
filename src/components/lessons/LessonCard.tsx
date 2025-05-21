@@ -1,7 +1,7 @@
 
 import type { Lesson } from '@/types';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
@@ -14,12 +14,9 @@ export default function LessonCard({ lesson }: LessonCardProps) {
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-primary">{lesson.title}</CardTitle>
-        <CardDescription className="text-sm text-muted-foreground h-20 overflow-hidden">
-          {lesson.richTextContent.replace(/<[^>]+>/g, '').substring(0, 150)}...
-        </CardDescription>
+        {/* CardDescription removed */}
       </CardHeader>
       <CardContent className="flex-grow">
-        {/* Could add more details like tags or difficulty here */}
         <p className="text-xs text-muted-foreground">Subject: {lesson.subject}</p>
       </CardContent>
       <CardFooter className="border-t pt-4">

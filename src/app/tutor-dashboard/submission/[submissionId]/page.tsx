@@ -9,9 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input'; // Import Input
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckSquare, Loader2, MessageSquare, Percent } from 'lucide-react';
+import { ArrowLeft, CheckSquare, Loader2, MessageSquare, Brain } from 'lucide-react'; // Added Brain icon
 import { format } from 'date-fns';
 import { updateSubmissionByTutorAction } from '@/lib/actions';
 import Link from 'next/link';
@@ -26,7 +26,7 @@ export default function SubmissionDetailPage() {
 
   const [submission, setSubmission] = useState<SubmittedWork | undefined>(undefined);
   const [tutorFeedback, setTutorFeedback] = useState('');
-  const [currentScore, setCurrentScore] = useState<string>(''); // State for score input
+  const [currentScore, setCurrentScore] = useState<string>(''); 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function SubmissionDetailPage() {
       submission.id, 
       tutorFeedback, 
       'Reviewed',
-      scoreToSave, // Pass the score
+      scoreToSave, 
       submittedWork 
     );
 
@@ -125,9 +125,20 @@ export default function SubmissionDetailPage() {
         </CardHeader>
       </Card>
 
+      {submission.studentReasoning && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center"><Brain size={18} className="mr-2 text-primary"/>Student's Reasoning</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="p-4 bg-muted rounded-md whitespace-pre-wrap text-sm">{submission.studentReasoning}</pre>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle>Student's Answer</CardTitle>
+          <CardTitle>Student's Solution</CardTitle>
         </CardHeader>
         <CardContent>
           <pre className="p-4 bg-muted rounded-md whitespace-pre-wrap text-sm">{submission.studentAnswer}</pre>
@@ -198,4 +209,3 @@ export default function SubmissionDetailPage() {
     </div>
   );
 }
-

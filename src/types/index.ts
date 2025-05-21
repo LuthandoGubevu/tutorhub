@@ -21,14 +21,16 @@ export interface StudentAnswer {
   lessonId: string;
   studentId: string;
   answer: string;
+  studentReasoning?: string; // Added studentReasoning
   timestamp: string;
 }
 
 export interface SubmittedWork {
   id: string;
   lesson: Lesson;
-  studentId: string; // Added studentId
+  studentId: string; 
   studentAnswer: string;
+  studentReasoning?: string; // Added studentReasoning
   submittedAt: string;
   aiFeedbackSuggestion?: string;
   tutorFeedback?: string;

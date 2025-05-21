@@ -5,12 +5,9 @@ import { suggestFeedback, type SuggestFeedbackInput, type SuggestFeedbackOutput 
 import type { StudentAnswer, LessonFeedback, Booking, Lesson, SubmittedWork } from '@/types';
 import { getLessonById } from './data';
 
-// Simulate student ID for now
-// const MOCK_STUDENT_ID = "student123"; // This will be overridden by actual logged-in user if available - This line is no longer used
 
 interface SubmitAnswerResult {
   success: boolean;
-  submittedAnswer?: StudentAnswer; // This might be slightly redundant if SubmittedWork is the main return
   newSubmission?: SubmittedWork;
   aiFeedbackSuggestion?: string;
   error?: string;
@@ -19,11 +16,15 @@ interface SubmitAnswerResult {
 export async function submitAnswerAction(
   lessonId: string,
   answer: string,
+  reasoning: string, // Added reasoning parameter
   subject: 'Mathematics' | 'Physics',
-  studentId: string // Pass the actual student ID
+  studentId: string 
 ): Promise<SubmitAnswerResult> {
   if (!answer.trim()) {
     return { success: false, error: "Answer cannot be empty." };
+  }
+  if (!reasoning.trim()) {
+    return { success: false, error: "Reasoning cannot be empty." };
   }
 
   const lesson = getLessonById(subject, lessonId);
@@ -32,22 +33,13 @@ export async function submitAnswerAction(
   }
   
   const timestamp = new Date().toISOString();
-  // const studentAnswerData: StudentAnswer = { // Not directly used for return anymore
-  //   lessonId,
-  //   studentId: studentId, 
-  //   answer,
-  //   timestamp,
-  // };
 
-  // Log data that would be sent to the tutor
-  // console.log("Answer submitted (simulated):", studentAnswerData); // Less relevant now
-
-  // Call AI flow
   let aiSuggestion: string | undefined;
   try {
     const aiInput: SuggestFeedbackInput = {
       lessonContent: lesson.richTextContent,
       studentAnswer: answer,
+      studentReasoning: reasoning, // Pass reasoning to AI
       lessonId: lessonId,
       studentId: studentId, 
       timestamp: timestamp,
@@ -57,7 +49,6 @@ export async function submitAnswerAction(
     console.log("AI Feedback Suggestion:", aiSuggestion);
   } catch (error) {
     console.error("Error getting AI feedback:", error);
-    // Proceed without AI feedback if it fails
   }
   
   const newSubmissionData: SubmittedWork = {
@@ -65,10 +56,10 @@ export async function submitAnswerAction(
     lesson: lesson,
     studentId: studentId, 
     studentAnswer: answer,
+    studentReasoning: reasoning, // Save reasoning
     submittedAt: timestamp,
     aiFeedbackSuggestion: aiSuggestion,
     status: 'Pending',
-    // Score is not set at initial submission
   };
   
   return { 
@@ -86,7 +77,7 @@ interface SubmitFeedbackResult {
 }
 
 export async function submitLessonFeedbackAction(
-  feedbackData: Omit<LessonFeedback, 'timestamp' | 'studentId'>, // studentId will be passed
+  feedbackData: Omit<LessonFeedback, 'timestamp' | 'studentId'>, 
   studentId: string
 ): Promise<SubmitFeedbackResult> {
   const timestamp = new Date().toISOString();
@@ -107,14 +98,15 @@ interface BookSessionResult {
   error?: string;
 }
 
+// studentId will be passed from AuthContext
 export async function bookSessionAction(
   bookingDetails: Omit<Booking, 'id' | 'studentId' | 'googleMeetLink' | 'status' | 'tutorId'>,
-  studentId: string
+  studentId: string 
 ): Promise<BookSessionResult> {
   const newBooking: Booking = {
     ...bookingDetails,
     id: `booking-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-    studentId: studentId,
+    studentId: studentId, // Use passed studentId
     tutorId: "tutor456", 
     googleMeetLink: `https://meet.google.com/lookup/mock-${Math.random().toString(36).substring(7)}`, 
     status: 'Confirmed', 
@@ -136,7 +128,7 @@ export async function updateSubmissionByTutorAction(
   submissionId: string,
   tutorFeedback: string,
   newStatus: 'Reviewed' | 'Pending',
-  score: number | undefined, // Added score parameter
+  score: number | undefined, 
   currentSubmissions: SubmittedWork[] 
 ): Promise<UpdateSubmissionResult> {
   
@@ -151,7 +143,7 @@ export async function updateSubmissionByTutorAction(
     ...submissionToUpdate,
     tutorFeedback: tutorFeedback,
     status: newStatus,
-    score: score !== undefined ? score : submissionToUpdate.score, // Use provided score, or keep existing
+    score: score !== undefined ? score : submissionToUpdate.score, 
   };
   
   console.log("Submission updated by tutor (simulated):", updatedSubmission);

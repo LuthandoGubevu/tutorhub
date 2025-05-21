@@ -2,9 +2,10 @@
 "use client";
 
 import type { SubmittedWork } from '@/types';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'; // Keep general Recharts Tooltip for default behavior if needed
 import {
   ChartContainer,
+  ChartTooltip, // Add ChartTooltip import
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -97,3 +98,4 @@ export default function PerformanceChart({ submittedWork, subject }: Performance
     </Card>
   );
 }
+

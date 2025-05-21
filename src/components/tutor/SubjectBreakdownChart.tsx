@@ -2,9 +2,10 @@
 "use client";
 
 import type { SubmittedWork } from '@/types';
-import { Pie, PieChart, ResponsiveContainer, Tooltip, Cell } from 'recharts';
+import { Pie, PieChart, ResponsiveContainer, Cell } from 'recharts'; // Removed Tooltip from here
 import {
   ChartContainer,
+  ChartTooltip, // Add ChartTooltip import
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
@@ -92,3 +93,4 @@ export default function SubjectBreakdownChart({ submissions }: SubjectBreakdownC
     </Card>
   );
 }
+

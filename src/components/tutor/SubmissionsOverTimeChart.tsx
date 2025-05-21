@@ -2,9 +2,10 @@
 "use client";
 
 import type { SubmittedWork } from '@/types';
-import { Line, LineChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { Line, LineChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts'; // Removed Tooltip from here as ChartTooltip is used
 import {
   ChartContainer,
+  ChartTooltip, // Add ChartTooltip import
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,3 +101,4 @@ export default function SubmissionsOverTimeChart({ submissions }: SubmissionsOve
     </Card>
   );
 }
+

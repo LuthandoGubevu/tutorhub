@@ -3,6 +3,7 @@
 
 import AppLayout from '@/components/AppLayout';
 import { useStudentData } from '@/contexts/StudentDataContext';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { mathematicsLessons, physicsLessons } from '@/lib/data';
@@ -14,6 +15,7 @@ import { Atom, Sigma, BarChart3, LayoutGrid, AlertCircle } from 'lucide-react';
 
 export default function DashboardPage() {
   const { submittedWork, bookings } = useStudentData();
+  const { currentUser } = useAuth(); // Get currentUser
 
   const allLessons = [...mathematicsLessons, ...physicsLessons];
 
@@ -33,13 +35,20 @@ export default function DashboardPage() {
   const totalCompletedLessons = mathData.completed + physicsData.completed;
   const overallCompletionPercentage = totalLessons > 0 ? Math.round((totalCompletedLessons / totalLessons) * 100) : 0;
 
+  const getFirstName = (displayName: string | null | undefined): string => {
+    if (!displayName) return "There";
+    return displayName.split(' ')[0];
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <Card className="shadow-lg bg-gradient-to-r from-primary to-accent text-primary-foreground">
           <CardHeader className="flex flex-row justify-between items-start p-6">
             <div>
-              <CardTitle className="text-4xl font-bold">Dashboard</CardTitle>
+              <CardTitle className="text-4xl font-bold">
+                Hi, {getFirstName(currentUser?.displayName)}
+              </CardTitle>
               <CardDescription className="text-lg text-primary-foreground/90 mt-1">
                 Track your progress, manage assignments, and view performance insights.
               </CardDescription>
@@ -124,3 +133,4 @@ export default function DashboardPage() {
     </AppLayout>
   );
 }
+

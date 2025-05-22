@@ -3,8 +3,7 @@ export interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
-  role: 'student' | 'tutor' | null; // Role can be student, tutor, or null if not set/known
-  // Add other user-specific fields like profilePicture if needed
+  role: 'student' | 'tutor' | null; 
 }
 
 export interface Lesson {
@@ -17,11 +16,18 @@ export interface Lesson {
   exampleSolution?: string;
 }
 
+export interface Branch {
+  id: string;
+  title: string;
+  description: string;
+  lessons: Lesson[];
+}
+
 export interface StudentAnswer {
   lessonId: string;
   studentId: string;
   answer: string;
-  studentReasoning?: string; // Added studentReasoning
+  studentReasoning?: string; 
   timestamp: string;
 }
 
@@ -30,18 +36,18 @@ export interface SubmittedWork {
   lesson: Lesson;
   studentId: string; 
   studentAnswer: string;
-  studentReasoning?: string; // Added studentReasoning
+  studentReasoning?: string; 
   submittedAt: string;
   aiFeedbackSuggestion?: string;
   tutorFeedback?: string;
   status: 'Pending' | 'Reviewed';
-  score?: number; // Optional: 0-100, for performance tracking
+  score?: number; 
 }
 
 export interface Booking {
   id:string;
   studentId: string;
-  tutorId: string; // Mock
+  tutorId: string; 
   subject: 'Mathematics' | 'Physics' | 'General';
   dateTime: Date;
   durationMinutes: number;
@@ -51,7 +57,7 @@ export interface Booking {
 
 export interface LessonFeedback {
   lessonId: string;
-  studentId: string; // Mock
+  studentId: string; 
   rating: number;
   comments: string;
   timestamp: string;
@@ -59,5 +65,5 @@ export interface LessonFeedback {
 
 export interface TutorAvailability {
   date: Date;
-  timeSlots: string[]; // e.g., "09:00", "09:30"
+  timeSlots: string[]; 
 }

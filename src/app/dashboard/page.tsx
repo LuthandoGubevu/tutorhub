@@ -6,21 +6,27 @@ import { useStudentData } from '@/contexts/StudentDataContext';
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { mathematicsLessons, physicsLessons } from '@/lib/data';
+import { mathematicsBranches, physicsLessons } from '@/lib/data'; // Updated import
 import SubjectOverviewCard from '@/components/dashboard/SubjectOverviewCard';
 import AssignmentSummaryTable from '@/components/dashboard/AssignmentSummaryTable';
 import PerformanceChart from '@/components/dashboard/PerformanceChart';
 import AlertsPanel from '@/components/dashboard/AlertsPanel';
 import { Atom, Sigma, BarChart3, LayoutGrid, AlertCircle } from 'lucide-react';
+import type { Lesson } from '@/types';
 
 export default function DashboardPage() {
   const { submittedWork, bookings } = useStudentData();
   const { currentUser } = useAuth(); // Get currentUser
 
-  const allLessons = [...mathematicsLessons, ...physicsLessons];
+  // Consolidate all math lessons from branches
+  const allMathematicsLessons: Lesson[] = mathematicsBranches.reduce((acc, branch) => {
+    return acc.concat(branch.lessons);
+  }, [] as Lesson[]);
+
+  const allLessons = [...allMathematicsLessons, ...physicsLessons];
 
   const getSubjectData = (subject: 'Mathematics' | 'Physics') => {
-    const subjectLessons = subject === 'Mathematics' ? mathematicsLessons : physicsLessons;
+    const subjectLessons = subject === 'Mathematics' ? allMathematicsLessons : physicsLessons;
     const completed = submittedWork.filter(sw => sw.lesson.subject === subject).length;
     return {
       total: subjectLessons.length,

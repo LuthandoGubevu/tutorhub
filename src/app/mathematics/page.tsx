@@ -1,8 +1,8 @@
 
 import AppLayout from '@/components/AppLayout';
-import LessonCard from '@/components/lessons/LessonCard';
-import { mathematicsLessons } from '@/lib/data';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import BranchCard from '@/components/branches/BranchCard';
+import { mathematicsBranches } from '@/lib/data';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sigma } from 'lucide-react';
 
 export default function MathematicsPage() {
@@ -12,17 +12,17 @@ export default function MathematicsPage() {
         <Card className="shadow-lg bg-[#103452] text-primary-foreground">
           <CardHeader>
             <CardTitle className="text-4xl font-bold flex items-center">
-              <Sigma size={40} className="mr-3"/> Mathematics Lessons
+              <Sigma size={40} className="mr-3"/> Mathematics Branches
             </CardTitle>
             <CardDescription className="text-lg text-primary-foreground/90">
-              Explore a variety of topics in Mathematics. Select a lesson to get started.
+              Explore various branches of Mathematics. Select a branch to view its lessons.
             </CardDescription>
           </CardHeader>
         </Card>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mathematicsLessons.map((lesson) => (
-            <LessonCard key={lesson.id} lesson={lesson} />
+          {mathematicsBranches.map((branch) => (
+            <BranchCard key={branch.id} branch={branch} />
           ))}
         </div>
       </div>

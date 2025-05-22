@@ -20,6 +20,7 @@ export default function LessonCard({ lesson }: LessonCardProps) {
       </CardContent>
       <CardFooter className="border-t pt-4">
         <Button asChild className="w-full bg-[#103452] hover:bg-[#0d2a43] text-accent-foreground">
+          {/* Ensure the link points to the individual lesson page */}
           <Link href={`/${lesson.subject.toLowerCase()}/${lesson.id}`} className="flex items-center justify-center">
             View Lesson <ArrowRight size={16} className="ml-2" />
           </Link>

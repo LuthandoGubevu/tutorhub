@@ -4,7 +4,7 @@
 import type { SubmittedWork, Booking, Lesson } from '@/types';
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mathematicsLessons, physicsLessons } from '@/lib/data'; 
+import { mathematicsBranches, physicsLessons } from '@/lib/data'; 
 
 interface StudentDataContextType {
   submittedWork: SubmittedWork[];
@@ -16,21 +16,8 @@ interface StudentDataContextType {
 
 const StudentDataContext = createContext<StudentDataContextType | undefined>(undefined);
 
-const SUBMITTED_WORK_STORAGE_KEY = 'tutorHubOnlineAcademy_submittedWork_v1';
-const BOOKINGS_STORAGE_KEY = 'tutorHubOnlineAcademy_bookings_v1';
-
-// This function is now less relevant for updates as scores are explicitly set by tutors.
-// It can be kept for initial mock data or if a default score is needed on creation under specific conditions.
-// For now, score assignment on initial 'Reviewed' status is removed.
-const assignMockScoreIfNeeded = (work: SubmittedWork): SubmittedWork => {
-  // Example: Only assign mock score if it's a new submission somehow marked 'Reviewed' and has no score.
-  // This scenario is unlikely with current flow. Tutors explicitly set scores.
-  // if (work.status === 'Reviewed' && typeof work.score === 'undefined') {
-  //   return { ...work, score: Math.floor(Math.random() * 41) + 60 };
-  // }
-  return work;
-};
-
+const SUBMITTED_WORK_STORAGE_KEY = 'TutorHubOnlineAcademy_submittedWork_v1';
+const BOOKINGS_STORAGE_KEY = 'TutorHubOnlineAcademy_bookings_v1';
 
 export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [submittedWork, setSubmittedWork] = useState<SubmittedWork[]>(() => {
@@ -39,10 +26,20 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
       if (storedWork) {
         const parsedWork = JSON.parse(storedWork) as SubmittedWork[];
         return parsedWork.map(work => {
-          const lessonSet = work.lesson.subject === 'Mathematics' ? mathematicsLessons : physicsLessons;
-          const fullLesson = lessonSet.find(l => l.id === work.lesson.id) || work.lesson;
-          const workWithStudentId = { ...work, lesson: fullLesson, studentId: work.studentId || 'unknown_student' };
-          // We don't assign mock scores here anymore on load, existing scores will be preserved.
+          let fullLesson: Lesson | undefined = work.lesson;
+          if (work.lesson.subject === 'Mathematics') {
+            for (const branch of mathematicsBranches) {
+              const foundLesson = branch.lessons.find(l => l.id === work.lesson.id);
+              if (foundLesson) {
+                fullLesson = foundLesson;
+                break;
+              }
+            }
+          } else if (work.lesson.subject === 'Physics') {
+            fullLesson = physicsLessons.find(l => l.id === work.lesson.id) || work.lesson;
+          }
+          
+          const workWithStudentId = { ...work, lesson: fullLesson || work.lesson, studentId: work.studentId || 'unknown_student' };
           return workWithStudentId; 
         });
       }
@@ -72,15 +69,12 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [bookings]);
 
   const addSubmittedWork = (newWork: SubmittedWork) => { 
-    // Score is not assigned on initial submission by student
     setSubmittedWork(prev => [newWork, ...prev.filter(p => p.id !== newWork.id)].sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
   };
 
   const updateSubmittedWork = (workId: string, updates: Partial<SubmittedWork>) => {
     setSubmittedWork(prev => prev.map(work => {
       if (work.id === workId) {
-        // Direct update, score comes from `updates` if provided by tutor.
-        // No automatic mock score assignment here.
         return { ...work, ...updates };
       }
       return work;

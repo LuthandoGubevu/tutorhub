@@ -4,16 +4,22 @@ import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import React from 'react'; // Import React
 
 interface BranchCardProps {
   branch: Branch;
 }
 
 export default function BranchCard({ branch }: BranchCardProps) {
+  const IconComponent = branch.icon;
+
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold text-[#103452]">{branch.title}</CardTitle>
+        <CardTitle className="text-xl font-semibold text-[#103452] flex items-center">
+          {IconComponent && <IconComponent size={24} className="mr-2" />}
+          <span>{branch.title}</span>
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
         <CardDescription className="text-sm text-muted-foreground line-clamp-3">

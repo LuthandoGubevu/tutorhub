@@ -1,4 +1,6 @@
 
+import type { LucideProps } from 'lucide-react';
+
 export interface User {
   uid: string;
   email: string | null;
@@ -21,6 +23,7 @@ export interface Branch {
   title: string;
   description: string;
   lessons: Lesson[];
+  icon?: React.ComponentType<LucideProps>; // Changed type here
 }
 
 export interface StudentAnswer {

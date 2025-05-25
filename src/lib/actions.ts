@@ -5,6 +5,56 @@ import { suggestFeedback, type SuggestFeedbackInput, type SuggestFeedbackOutput 
 import type { StudentAnswer, LessonFeedback, Booking, Lesson, SubmittedWork } from '@/types';
 import { getLessonById } from './data';
 
+/*
+Recommended Firestore Security Rules:
+(Apply these in your Firebase Console -> Firestore Database -> Rules)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users Collection:
+    // - Allow users to read and update their own document.
+    // - Allow users to create their own document (e.g., on registration).
+    // - Tutors can potentially read all user profiles if needed for display names etc.
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId || 
+                    (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+      allow create, update: if request.auth.uid == userId;
+      // Deny delete unless specific admin role is implemented
+      allow delete: if false; 
+    }
+
+    // Submissions Collection (if/when migrated from localStorage to Firestore):
+    // - Students can create submissions and only read/update their own.
+    // - Tutors can read all submissions and update any submission (e.g., to add feedback/grade).
+    match /submissions/{submissionId} {
+      allow create: if request.auth.uid == request.resource.data.studentId;
+      allow read: if request.auth.uid == resource.data.studentId ||
+                    (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+      allow update: if request.auth.uid == resource.data.studentId || // Student might edit before review
+                      (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+      // Deny delete unless specific admin/tutor role is implemented carefully
+      allow delete: if (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+    }
+
+    // Bookings Collection (if/when migrated from localStorage to Firestore):
+    match /bookings/{bookingId} {
+      allow create: if request.auth.uid == request.resource.data.studentId;
+      allow read, update: if request.auth.uid == resource.data.studentId ||
+                           (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+      allow delete: if (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+    }
+
+    // LessonFeedback Collection (if/when migrated from localStorage to Firestore):
+    match /lessonFeedback/{feedbackId} {
+      allow create: if request.auth.uid == request.resource.data.studentId;
+      allow read: if request.auth.uid == resource.data.studentId ||
+                     (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+      // allow update, delete: by owner or tutor as needed
+    }
+  }
+}
+*/
+
 
 interface SubmitAnswerResult {
   success: boolean;
@@ -16,7 +66,7 @@ interface SubmitAnswerResult {
 export async function submitAnswerAction(
   lessonId: string,
   answer: string,
-  reasoning: string, // Added reasoning parameter
+  reasoning: string, 
   subject: 'Mathematics' | 'Physics',
   studentId: string 
 ): Promise<SubmitAnswerResult> {
@@ -39,7 +89,7 @@ export async function submitAnswerAction(
     const aiInput: SuggestFeedbackInput = {
       lessonContent: lesson.richTextContent,
       studentAnswer: answer,
-      studentReasoning: reasoning, // Pass reasoning to AI
+      studentReasoning: reasoning, 
       lessonId: lessonId,
       studentId: studentId, 
       timestamp: timestamp,
@@ -56,11 +106,16 @@ export async function submitAnswerAction(
     lesson: lesson,
     studentId: studentId, 
     studentAnswer: answer,
-    studentReasoning: reasoning, // Save reasoning
+    studentReasoning: reasoning, 
     submittedAt: timestamp,
     aiFeedbackSuggestion: aiSuggestion,
     status: 'Pending',
   };
+  
+  // In a real Firestore setup, you would write newSubmissionData to a 'submissions' collection here.
+  // e.g., await addDoc(collection(db, "submissions"), newSubmissionData);
+  // For now, it's returned to be handled by StudentDataContext (localStorage).
+  console.log("Simulating submission save (currently localStorage):", newSubmissionData);
   
   return { 
     success: true, 
@@ -78,16 +133,17 @@ interface SubmitFeedbackResult {
 
 export async function submitLessonFeedbackAction(
   feedbackData: Omit<LessonFeedback, 'timestamp' | 'studentId'>, 
-  studentId: string
+  studentId: string // This was missing, ensure studentId is passed if needed
 ): Promise<SubmitFeedbackResult> {
   const timestamp = new Date().toISOString();
   const fullFeedbackData: LessonFeedback = {
-    ...feedbackData,
-    studentId: studentId, 
+    ...feedbackData, // lessonId, rating, comments
+    studentId: studentId, // Ensure studentId is part of the feedback
     timestamp,
   };
 
-  console.log("Lesson feedback submitted (simulated):", fullFeedbackData);
+  // In a real Firestore setup, you would write fullFeedbackData to a 'lessonFeedback' collection.
+  console.log("Lesson feedback submitted (simulated, localStorage):", fullFeedbackData);
   return { success: true, feedback: fullFeedbackData };
 }
 
@@ -106,13 +162,14 @@ export async function bookSessionAction(
   const newBooking: Booking = {
     ...bookingDetails,
     id: `booking-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-    studentId: studentId, // Use passed studentId
-    tutorId: "tutor456", 
+    studentId: studentId, 
+    tutorId: "tutor_placeholder_id", // This should ideally come from available tutor data
     googleMeetLink: `https://meet.google.com/lookup/mock-${Math.random().toString(36).substring(7)}`, 
     status: 'Confirmed', 
   };
 
-  console.log("Session booked (simulated):", newBooking);
+  // In a real Firestore setup, you would write newBooking to a 'bookings' collection.
+  console.log("Session booked (simulated, localStorage):", newBooking);
   console.log("Google Meet link generated (simulated):", newBooking.googleMeetLink);
   return { success: true, booking: newBooking };
 }
@@ -129,7 +186,7 @@ export async function updateSubmissionByTutorAction(
   tutorFeedback: string,
   newStatus: 'Reviewed' | 'Pending',
   score: number | undefined, 
-  currentSubmissions: SubmittedWork[] 
+  currentSubmissions: SubmittedWork[] // This reflects localStorage; Firestore would query and update directly
 ): Promise<UpdateSubmissionResult> {
   
   const submissionIndex = currentSubmissions.findIndex(s => s.id === submissionId);
@@ -146,6 +203,9 @@ export async function updateSubmissionByTutorAction(
     score: score !== undefined ? score : submissionToUpdate.score, 
   };
   
-  console.log("Submission updated by tutor (simulated):", updatedSubmission);
+  // In a real Firestore setup, you would update the document in the 'submissions' collection.
+  // e.g., await updateDoc(doc(db, "submissions", submissionId), { tutorFeedback, status: newStatus, score });
+  console.log("Submission updated by tutor (simulated, localStorage):", updatedSubmission);
   return { success: true, updatedSubmission };
 }
+

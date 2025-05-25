@@ -34,6 +34,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUserType | null) => {
       setIsLoadingAuth(true); 
       if (firebaseUser) {
+        console.log("Auth State Changed - User UID:", firebaseUser.uid); // AI Suggested Logging
         try {
           let resolvedRole: 'student' | 'tutor' | null = null;
           let resolvedDisplayName: string | null = firebaseUser.displayName;
@@ -47,49 +48,45 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (userDoc.exists() && userDoc.data()?.displayName) {
               resolvedDisplayName = userDoc.data()?.displayName;
             } else if (!userDoc.exists()) {
-              // Create document for tutor if it doesn't exist (e.g., first Google sign-in as tutor)
+              // Create document for tutor if it doesn't exist
               await setDoc(userDocRef, { 
                 uid: firebaseUser.uid,
                 role: 'tutor', 
                 email: userEmail, 
-                displayName: resolvedDisplayName || 'Tutor User',
+                displayName: resolvedDisplayName || 'Tutor User', // Use Firebase Auth display name if available
                 createdAt: new Date().toISOString(),
-              });
-              console.log(`Created Firestore document for tutor: ${userEmail}`);
+              }, { merge: true }); // Use merge to avoid overwriting existing fields if any
+              console.log(`Created/Updated Firestore document for tutor: ${userEmail}`);
             }
             console.log(`User with email ${userEmail} assigned 'tutor' role based on hardcoded email.`);
           } else if (userDoc.exists()) {
-              const userDataFromFirestore = userDoc.data() as { role?: 'student' | 'tutor', displayName?: string, fullName?: string };
+              const userDataFromFirestore = userDoc.data() as { role?: 'student' | 'tutor', displayName?: string, fullName?: string }; // fullName from registration
               if (userDataFromFirestore.role) {
                 resolvedRole = userDataFromFirestore.role;
               } else {
                 console.warn(`Firestore document for UID ${firebaseUser.uid} exists but is missing the 'role' field. Defaulting to 'student' role for this session and updating Firestore.`);
                 resolvedRole = 'student'; 
-                 await setDoc(userDocRef, { role: 'student' }, { merge: true }); // Add role if missing
+                 await setDoc(userDocRef, { role: 'student' }, { merge: true });
               }
-              // Prefer displayName from Auth, then fullName from Firestore, then a generic one
               resolvedDisplayName = firebaseUser.displayName || userDataFromFirestore.displayName || userDataFromFirestore.fullName || 'Student User';
           } else {
-            // User document doesn't exist, might be a new user (e.g., post-registration or first Google sign-in)
-            // For users not matching TUTOR_EMAIL_ADDRESS, default to student.
-            // The registration flow now creates this document.
-            // This block primarily handles cases like Google Sign-In for a new user.
-            console.warn(`Firestore document not found for UID ${firebaseUser.uid}. Defaulting to 'student' role and creating document if it was a Google Sign In.`);
+            // User document doesn't exist, likely a new user post-registration or first Google sign-in
+            console.warn(`Firestore document not found for UID ${firebaseUser.uid}. This should have been created during registration or Google Sign-In. Defaulting to 'student' role for this session.`);
             resolvedRole = 'student';
-            // Check if this was a Google sign-in for a new user
+             // If it's a Google Sign-In and the doc is missing, create it.
             if (firebaseUser.providerData.some(provider => provider.providerId === GoogleAuthProvider.PROVIDER_ID)) {
                 await setDoc(userDocRef, {
                   uid: firebaseUser.uid,
                   role: 'student',
                   email: userEmail,
-                  displayName: resolvedDisplayName || 'New Student', // Google might provide displayName
+                  displayName: resolvedDisplayName || 'New Student',
                   createdAt: new Date().toISOString(),
-                });
+                }, { merge: true });
                 console.log(`Created Firestore document for new Google Sign-In student: ${userEmail}`);
             } else {
-                // If it's not Google sign-in and doc is missing, it's an odd state, possibly manual deletion.
-                // Log and proceed with student role for the session.
-                 console.log(`User document missing for non-Google sign-in UID ${firebaseUser.uid}. This user should re-register or contact support if issues persist.`);
+                 // If it's email/password registration, the /register page should have created this.
+                 // This path suggests something went wrong, or manual deletion.
+                console.log(`User document missing for UID ${firebaseUser.uid}. Registration flow should create this.`)
             }
           }
 
@@ -112,26 +109,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         } catch (error) {
           console.error("Error processing user data in onAuthStateChanged:", error);
-           const appUserOnError: AuthUserType = { // Fallback user object
+           const appUserOnError: AuthUserType = { 
              uid: firebaseUser.uid,
              email: firebaseUser.email,
              displayName: firebaseUser.displayName,
-             role: 'student', // Fallback role
+             role: 'student', 
            };
           setCurrentUser(appUserOnError);
-          setUserRole('student'); // Fallback role
+          setUserRole('student'); 
           if (pathname === '/login' || pathname === '/register') router.replace('/dashboard'); 
+        } finally {
+            setIsLoadingAuth(false); // Set loading to false after processing
         }
-      } else { // No firebaseUser
+      } else { 
         setCurrentUser(null);
         setUserRole(null);
-        // Protect internal pages if user is not logged in
+        setIsLoadingAuth(false); // Set loading to false if no user
         const protectedPaths = ['/dashboard', '/tutor-dashboard', '/mathematics', '/physics', '/book-session'];
         if (protectedPaths.some(p => pathname.startsWith(p)) && pathname !== '/login' && pathname !== '/register' && pathname !== '/') {
              router.replace('/login');
         }
       }
-      setIsLoadingAuth(false);
     });
     return () => unsubscribe();
   }, [router, pathname]);
@@ -153,7 +151,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await signInWithPopup(auth, provider);
       // onAuthStateChanged will handle Firestore doc creation/update and redirection
-    } catch (error) {
+    } catch (error: any) {
       setIsLoadingAuth(false);
       console.error("Google Sign-In failed:", error);
       throw error;
@@ -164,16 +162,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoadingAuth(true);
     try {
       await signOut(auth);
-      setCurrentUser(null); // Explicitly clear user state
-      setUserRole(null);    // Explicitly clear role
-      router.replace('/'); // Redirect to landing page on logout
+      // setCurrentUser(null) and setUserRole(null) will be handled by onAuthStateChanged
+      router.replace('/'); 
     } catch (error) {
       console.error("Logout failed:", error);
-      // Optionally, set isLoadingAuth to false here too, though redirection might happen fast
-    } finally {
-        // Ensure isLoadingAuth is false even if redirection is quick or error occurs
-        // The onAuthStateChanged will also set it to false, but this ensures UI is responsive.
-        setIsLoadingAuth(false);
+      setIsLoadingAuth(false); // Ensure loading is false on error
     }
   };
 

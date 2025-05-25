@@ -19,21 +19,26 @@ service cloud.firestore {
       allow read: if request.auth.uid == userId || 
                     (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
       allow create, update: if request.auth.uid == userId;
-      // Deny delete unless specific admin role is implemented
-      allow delete: if false; 
+      allow delete: if false; // Deny delete unless specific admin role is implemented
     }
 
     // Submissions Collection (if/when migrated from localStorage to Firestore):
-    // - Students can create submissions and only read/update their own.
-    // - Tutors can read all submissions and update any submission (e.g., to add feedback/grade).
+    // This rule grants global read access to the specified tutor email,
+    // and allows other tutors to read submissions if they have an 'assignedTutor' field matching their UID.
+    // Students can create submissions and only read/update their own.
     match /submissions/{submissionId} {
       allow create: if request.auth.uid == request.resource.data.studentId;
-      allow read: if request.auth.uid == resource.data.studentId ||
-                    (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
-      allow update: if request.auth.uid == resource.data.studentId || // Student might edit before review
-                      (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
-      // Deny delete unless specific admin/tutor role is implemented carefully
-      allow delete: if (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+      
+      allow read: if (request.auth.token.email == "lgubevu@gmail.com") || // Global admin tutor
+                    (request.auth.uid == resource.data.studentId) || // Student owns the submission
+                    (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor' && resource.data.assignedTutor == request.auth.uid); // Assigned tutor
+
+      allow update: if (request.auth.token.email == "lgubevu@gmail.com") || // Global admin tutor can update
+                      (request.auth.uid == resource.data.studentId) || // Student might edit (if allowed by app logic)
+                      (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor' && resource.data.assignedTutor == request.auth.uid); // Assigned tutor can update
+
+      allow delete: if (request.auth.token.email == "lgubevu@gmail.com") || // Global admin tutor can delete
+                      (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor' && resource.data.assignedTutor == request.auth.uid); 
     }
 
     // Bookings Collection (if/when migrated from localStorage to Firestore):
@@ -110,6 +115,7 @@ export async function submitAnswerAction(
     submittedAt: timestamp,
     aiFeedbackSuggestion: aiSuggestion,
     status: 'Pending',
+    // score will be added by tutor
   };
   
   // In a real Firestore setup, you would write newSubmissionData to a 'submissions' collection here.
@@ -131,14 +137,15 @@ interface SubmitFeedbackResult {
   error?: string;
 }
 
+// studentId is passed from AuthContext
 export async function submitLessonFeedbackAction(
   feedbackData: Omit<LessonFeedback, 'timestamp' | 'studentId'>, 
-  studentId: string // This was missing, ensure studentId is passed if needed
+  studentId: string 
 ): Promise<SubmitFeedbackResult> {
   const timestamp = new Date().toISOString();
   const fullFeedbackData: LessonFeedback = {
     ...feedbackData, // lessonId, rating, comments
-    studentId: studentId, // Ensure studentId is part of the feedback
+    studentId: studentId, 
     timestamp,
   };
 
@@ -200,7 +207,7 @@ export async function updateSubmissionByTutorAction(
     ...submissionToUpdate,
     tutorFeedback: tutorFeedback,
     status: newStatus,
-    score: score !== undefined ? score : submissionToUpdate.score, 
+    score: score, // Directly use the passed score
   };
   
   // In a real Firestore setup, you would update the document in the 'submissions' collection.

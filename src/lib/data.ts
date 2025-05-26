@@ -1,5 +1,6 @@
 
 import type { Lesson, TutorAvailability, Branch } from '@/types';
+import type { LucideProps } from 'lucide-react'; // Ensure LucideProps is imported
 import {
   Calculator,
   Shapes,
@@ -16,15 +17,21 @@ import {
 } from 'lucide-react';
 
 const generateLessonsForBranch = (branchId: string, branchTitle: string, count: number): Lesson[] => {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${branchId}-lesson-${i + 1}`,
-    subject: 'Mathematics',
-    title: `${branchTitle}: Lesson ${i + 1}`,
-    videoUrl: 'https://www.youtube.com/embed/VScM8Z8Jls0', 
-    richTextContent: `<p>This is placeholder content for ${branchTitle}, Lesson ${i + 1}.</p><p>Explore related concepts and examples here. This lesson focuses on a specific aspect of ${branchTitle.toLowerCase()}.</p>`,
-    question: `What is a key concept in ${branchTitle}, Lesson ${i + 1}? (Placeholder question)`,
-    exampleSolution: `Example solution for ${branchTitle}, Lesson ${i + 1}. (Placeholder solution)`,
-  }));
+  return Array.from({ length: count }, (_, i) => {
+    let videoUrl = 'https://www.youtube.com/embed/VScM8Z8Jls0'; // Default video
+    if (branchId === 'algebra' && i === 0) {
+      videoUrl = 'https://www.youtube.com/embed/S31jsDI1_xQ'; // Specific video for Algebra Lesson 1
+    }
+    return {
+      id: `${branchId}-lesson-${i + 1}`,
+      subject: 'Mathematics',
+      title: `${branchTitle}: Lesson ${i + 1}`,
+      videoUrl: videoUrl,
+      richTextContent: `<p>This is placeholder content for ${branchTitle}, Lesson ${i + 1}.</p><p>Explore related concepts and examples here. This lesson focuses on a specific aspect of ${branchTitle.toLowerCase()}.</p>`,
+      question: `What is a key concept in ${branchTitle}, Lesson ${i + 1}? (Placeholder question)`,
+      exampleSolution: `Example solution for ${branchTitle}, Lesson ${i + 1}. (Placeholder solution)`,
+    };
+  });
 };
 
 export const mathematicsBranches: Branch[] = [
@@ -118,7 +125,7 @@ export const physicsLessons: Lesson[] = Array.from({ length: 10 }, (_, i) => ({
   id: `phys-${i + 1}`,
   subject: 'Physics',
   title: `Physics Lesson ${i + 1}: Exploring ${i % 2 === 0 ? 'Newtonian Mechanics' : 'Thermodynamics'} Principle ${Math.floor(i/2) + 1}`,
-  videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', 
+  videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
   richTextContent: `<p>Welcome to Physics Lesson ${i + 1}.</p><p>Today's topic involves understanding <strong>forces</strong> and <em>energy transformations</em>.</p><p>Key equation: \\( F = ma \\). We will also discuss concepts like kinetic energy: \\( KE = \\frac{1}{2}mv^2 \\).</p>`,
   question: `A ball of mass 2kg is thrown upwards with an initial velocity of 10 m/s. What is its maximum potential energy? (g = 9.8 m/s^2)`,
   exampleSolution: `Initial kinetic energy KE = 0.5 * m * v^2 = 0.5 * 2 * 10^2 = 100 J. At maximum height, all KE is converted to PE. So, max PE = 100 J.`,
@@ -142,15 +149,15 @@ export const getBranchById = (branchId: string): Branch | undefined => {
 
 export const tutorAvailability: TutorAvailability[] = [
   {
-    date: new Date(new Date().setDate(new Date().getDate() + 3)), 
+    date: new Date(new Date().setDate(new Date().getDate() + 3)),
     timeSlots: ["09:00", "09:30", "10:00", "14:00", "14:30"],
   },
   {
-    date: new Date(new Date().setDate(new Date().getDate() + 4)), 
+    date: new Date(new Date().setDate(new Date().getDate() + 4)),
     timeSlots: ["10:30", "11:00", "11:30", "15:00", "15:30", "16:00"],
   },
   {
-    date: new Date(new Date().setDate(new Date().getDate() + 7)), 
+    date: new Date(new Date().setDate(new Date().getDate() + 7)),
     timeSlots: ["09:00", "13:00", "13:30"],
   },
 ];

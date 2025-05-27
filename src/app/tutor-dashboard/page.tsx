@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { Eye, ListChecks, BookOpen, CheckCircle, Users, Sigma, Atom, Percent, Filter } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react'; // Added useEffect
 import MetricCard from '@/components/tutor/MetricCard';
 import SubmissionsOverTimeChart from '@/components/tutor/SubmissionsOverTimeChart';
 import SubjectBreakdownChart from '@/components/tutor/SubjectBreakdownChart';
@@ -17,10 +17,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from '@/components/ui/input';
 
 export default function TutorDashboardPage() {
-  const { submittedWork } = useStudentData();
+  const { submittedWork } = useStudentData(); // This comes from localStorage
   const [filterSubject, setFilterSubject] = useState<'All' | 'Mathematics' | 'Physics'>('All');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Reviewed'>('All');
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    console.log("[TutorDashboardPage] Received submittedWork from context:", submittedWork);
+  }, [submittedWork]);
 
 
   const metrics = useMemo(() => {
@@ -46,13 +50,13 @@ export default function TutorDashboardPage() {
   }, [submittedWork]);
 
   const filteredSubmissions = useMemo(() => {
-    return submittedWork
+    return submittedWork // This is the data from localStorage
       .filter(submission => {
         const subjectMatch = filterSubject === 'All' || submission.lesson.subject === filterSubject;
         const statusMatch = filterStatus === 'All' || submission.status === filterStatus;
         const searchTermMatch = searchTerm === '' || 
-                                submission.lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                submission.studentId.toLowerCase().includes(searchTerm.toLowerCase());
+                                (submission.lesson.title && submission.lesson.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                                (submission.studentId && submission.studentId.toLowerCase().includes(searchTerm.toLowerCase()));
         return subjectMatch && statusMatch && searchTermMatch;
       })
       .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
@@ -140,10 +144,10 @@ export default function TutorDashboardPage() {
               {filteredSubmissions.map((submission: SubmittedWork) => (
                 <Card key={submission.id} className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
                   <CardHeader>
-                    <CardTitle className="text-xl">{submission.lesson.title}</CardTitle>
+                    <CardTitle className="text-xl">{submission.lesson?.title || 'Lesson Title Missing'}</CardTitle>
                     <CardDescription>
                       Student ID: {submission.studentId} <br />
-                      Subject: {submission.lesson.subject} <br/>
+                      Subject: {submission.lesson?.subject || 'N/A'} <br/>
                       Submitted: {format(parseISO(submission.submittedAt), "MMM d, yyyy 'at' HH:mm")}
                     </CardDescription>
                   </CardHeader>
@@ -155,7 +159,7 @@ export default function TutorDashboardPage() {
                         {submission.status}
                       </Badge>
                     </div>
-                    {submission.score && (
+                    {submission.score !== undefined && (
                        <p className="text-sm text-muted-foreground">Score: <span className="font-semibold text-foreground">{submission.score}%</span></p>
                     )}
                      {submission.aiFeedbackSuggestion && !submission.tutorFeedback && (
@@ -180,6 +184,10 @@ export default function TutorDashboardPage() {
 }
 
 // Helper Label component if not using ShadCN one globally in forms for this context
+// Ensure Label is imported from '@/components/ui/label' or defined if needed locally
+// For example:
+// import { Label } from "@/components/ui/label";
+// OR if not imported:
 const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ className, ...props }) => (
   <label className={`block text-sm font-medium text-foreground mb-1 ${className}`} {...props} />
 );

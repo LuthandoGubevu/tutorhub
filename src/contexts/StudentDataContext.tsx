@@ -22,26 +22,42 @@ const BOOKINGS_STORAGE_KEY = 'TutorHubOnlineAcademy_bookings_v1';
 export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [submittedWork, setSubmittedWork] = useState<SubmittedWork[]>(() => {
     if (typeof window !== 'undefined') {
+      console.log(`[StudentDataContext] Attempting to load submittedWork from localStorage key: ${SUBMITTED_WORK_STORAGE_KEY}`);
       const storedWork = localStorage.getItem(SUBMITTED_WORK_STORAGE_KEY);
       if (storedWork) {
-        const parsedWork = JSON.parse(storedWork) as SubmittedWork[];
-        return parsedWork.map(work => {
-          let fullLesson: Lesson | undefined = work.lesson;
-          if (work.lesson.subject === 'Mathematics') {
-            for (const branch of mathematicsBranches) {
-              const foundLesson = branch.lessons.find(l => l.id === work.lesson.id);
-              if (foundLesson) {
-                fullLesson = foundLesson;
-                break;
+        try {
+          const parsedWork = JSON.parse(storedWork) as SubmittedWork[];
+          console.log('[StudentDataContext] Loaded from localStorage:', parsedWork);
+          // Rehydrate lesson objects to ensure they have the latest data from data.ts
+          // and not just the potentially partial/stale data stored in localStorage.
+          return parsedWork.map(work => {
+            let fullLesson: Lesson | undefined = work.lesson; 
+            if (work.lesson && work.lesson.subject === 'Mathematics') {
+              for (const branch of mathematicsBranches) {
+                const foundLesson = branch.lessons.find(l => l.id === work.lesson.id);
+                if (foundLesson) {
+                  fullLesson = foundLesson;
+                  break;
+                }
               }
+            } else if (work.lesson && work.lesson.subject === 'Physics') {
+              fullLesson = physicsLessons.find(l => l.id === work.lesson.id) || work.lesson;
             }
-          } else if (work.lesson.subject === 'Physics') {
-            fullLesson = physicsLessons.find(l => l.id === work.lesson.id) || work.lesson;
-          }
-          
-          const workWithStudentId = { ...work, lesson: fullLesson || work.lesson, studentId: work.studentId || 'unknown_student' };
-          return workWithStudentId; 
-        });
+            
+            // Ensure studentId is present (this was added previously)
+            const workWithStudentId = { 
+              ...work, 
+              lesson: fullLesson || work.lesson, // Fallback to stored lesson if not found
+              studentId: work.studentId || 'unknown_student' 
+            };
+            return workWithStudentId; 
+          });
+        } catch (e) {
+          console.error("[StudentDataContext] Error parsing submittedWork from localStorage:", e);
+          return [];
+        }
+      } else {
+        console.log("[StudentDataContext] No submittedWork found in localStorage.");
       }
       return [];
     }
@@ -58,6 +74,7 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      console.log(`[StudentDataContext] Saving submittedWork to localStorage:`, submittedWork);
       localStorage.setItem(SUBMITTED_WORK_STORAGE_KEY, JSON.stringify(submittedWork));
     }
   }, [submittedWork]);
@@ -69,20 +86,32 @@ export const StudentDataProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [bookings]);
 
   const addSubmittedWork = (newWork: SubmittedWork) => { 
-    setSubmittedWork(prev => [newWork, ...prev.filter(p => p.id !== newWork.id)].sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
+    setSubmittedWork(prev => {
+      const updatedWork = [newWork, ...prev.filter(p => p.id !== newWork.id)].sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      console.log('[StudentDataContext] addSubmittedWork, new state:', updatedWork);
+      return updatedWork;
+    });
   };
 
   const updateSubmittedWork = (workId: string, updates: Partial<SubmittedWork>) => {
-    setSubmittedWork(prev => prev.map(work => {
-      if (work.id === workId) {
-        return { ...work, ...updates };
-      }
-      return work;
-    }).sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
+    setSubmittedWork(prev => {
+      const updatedWork = prev.map(work => {
+        if (work.id === workId) {
+          return { ...work, ...updates };
+        }
+        return work;
+      }).sort((a,b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      console.log('[StudentDataContext] updateSubmittedWork, new state for ID ' + workId + ':', updatedWork);
+      return updatedWork;
+    });
   };
 
   const addBooking = (booking: Booking) => {
-    setBookings(prev => [booking, ...prev].sort((a,b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()));
+    setBookings(prev => {
+      const updatedBookings = [booking, ...prev].sort((a,b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+      console.log('[StudentDataContext] addBooking, new state:', updatedBookings);
+      return updatedBookings;
+    });
   };
 
   return (

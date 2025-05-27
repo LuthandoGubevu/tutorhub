@@ -8,11 +8,12 @@ import { auth, db, GoogleAuthProvider } from '@/lib/firebase';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User as FirebaseUserType, signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   currentUser: AuthUserType | null;
   userRole: 'student' | 'tutor' | null;
-  isGlobalAdminTutor: boolean; // New property
+  isGlobalAdminTutor: boolean;
   isLoadingAuth: boolean;
   loginUser: (email: string, pass: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -21,20 +22,21 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// IMPORTANT: Replace this with the actual tutor's email address
-const TUTOR_EMAIL_ADDRESS = 'lgubevu@gmail.com'; // Ensuring this matches your request
+// IMPORTANT: This email address identifies the single global admin tutor.
+const TUTOR_EMAIL_ADDRESS = 'lgubevu@gmail.com';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<AuthUserType | null>(null);
   const [userRole, setUserRole] = useState<'student' | 'tutor' | null>(null);
-  const [isGlobalAdminTutor, setIsGlobalAdminTutor] = useState<boolean>(false); // New state
+  const [isGlobalAdminTutor, setIsGlobalAdminTutor] = useState<boolean>(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const router = useRouter();
-  const pathname = usePathname(); 
+  const pathname = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUserType | null) => {
-      setIsLoadingAuth(true); 
+      setIsLoadingAuth(true);
       if (firebaseUser) {
         console.log("Auth State Changed - User UID:", firebaseUser.uid, "Email:", firebaseUser.email);
         try {
@@ -44,45 +46,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           let isSuperTutor = false;
 
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-
+          
           if (userEmail === TUTOR_EMAIL_ADDRESS) {
             resolvedRole = 'tutor';
-            isSuperTutor = true; // Set flag for the special tutor
-            if (userDoc.exists() && userDoc.data()?.displayName) {
-              resolvedDisplayName = userDoc.data()?.displayName;
-            } else if (!userDoc.exists()) {
+            isSuperTutor = true;
+            const tutorDoc = await getDoc(userDocRef);
+            if (!tutorDoc.exists() || tutorDoc.data()?.role !== 'tutor') {
               await setDoc(userDocRef, { 
                 uid: firebaseUser.uid,
                 role: 'tutor', 
                 email: userEmail, 
-                displayName: resolvedDisplayName || 'Tutor User',
-                createdAt: new Date().toISOString(),
+                displayName: resolvedDisplayName || 'TutorHub Admin',
+                createdAt: tutorDoc.exists() ? tutorDoc.data()?.createdAt : new Date().toISOString(),
               }, { merge: true });
-              console.log(`Created/Updated Firestore document for tutor: ${userEmail}`);
+              console.log(`Ensured Firestore document role is 'tutor' for admin tutor: ${userEmail}`);
             }
-            console.log(`User with email ${userEmail} assigned 'tutor' role (Global Admin).`);
-          } else if (userDoc.exists()) {
+            resolvedDisplayName = tutorDoc.data()?.displayName || resolvedDisplayName || 'TutorHub Admin';
+          } else {
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
               const userDataFromFirestore = userDoc.data() as { role?: 'student' | 'tutor', displayName?: string, fullName?: string };
               if (userDataFromFirestore.role) {
                 resolvedRole = userDataFromFirestore.role;
               } else {
                 console.warn(`Firestore document for UID ${firebaseUser.uid} exists but is missing 'role'. Defaulting to 'student' and updating Firestore.`);
                 resolvedRole = 'student'; 
-                 await setDoc(userDocRef, { role: 'student' }, { merge: true });
+                await setDoc(userDocRef, { role: 'student' }, { merge: true });
               }
               resolvedDisplayName = firebaseUser.displayName || userDataFromFirestore.displayName || userDataFromFirestore.fullName || 'Student User';
-          } else {
-            console.warn(`Firestore document not found for UID ${firebaseUser.uid}. Defaulting to 'student' role for this session and creating document.`);
-            resolvedRole = 'student';
-            await setDoc(userDocRef, {
-              uid: firebaseUser.uid,
-              role: 'student',
-              email: userEmail,
-              displayName: resolvedDisplayName || 'New Student',
-              createdAt: new Date().toISOString(),
-            }, { merge: true });
-            console.log(`Created Firestore document for new student: ${userEmail}`);
+            } else {
+              // This case is primarily for Google Sign-In or if a user was created in Auth but not Firestore
+              console.warn(`Firestore document not found for UID ${firebaseUser.uid}. Defaulting to 'student' role and creating document.`);
+              resolvedRole = 'student';
+              await setDoc(userDocRef, {
+                uid: firebaseUser.uid,
+                role: 'student',
+                email: userEmail,
+                displayName: resolvedDisplayName || 'New Student',
+                createdAt: new Date().toISOString(),
+              }, { merge: true });
+            }
           }
 
           const appUser: AuthUserType = {
@@ -92,45 +95,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             role: resolvedRole,
           };
           setCurrentUser(appUser);
-          setUserRole(appUser.role);
-          setIsGlobalAdminTutor(isSuperTutor); // Set the global admin tutor flag
+setUserRole(appUser.role);
+          setIsGlobalAdminTutor(isSuperTutor);
 
           const isAuthPage = pathname === '/login' || pathname === '/register';
           if (isAuthPage) { 
-              if (appUser.role === 'tutor') {
-                router.replace('/tutor-dashboard');
-              } else { 
-                router.replace('/dashboard');
-              }
+            if (appUser.role === 'tutor') {
+              router.replace('/tutor-dashboard');
+            } else { 
+              router.replace('/dashboard');
+            }
           }
         } catch (error) {
           console.error("Error processing user data in onAuthStateChanged:", error);
-           const appUserOnError: AuthUserType = { 
-             uid: firebaseUser.uid,
-             email: firebaseUser.email,
-             displayName: firebaseUser.displayName,
-             role: 'student', 
-           };
+          const appUserOnError: AuthUserType = { 
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            role: 'student', 
+          };
           setCurrentUser(appUserOnError);
-          setUserRole('student'); 
+setUserRole('student'); 
           setIsGlobalAdminTutor(false);
-          if (pathname === '/login' || pathname === '/register') router.replace('/dashboard'); 
+          // Avoid redirect loop if already on an auth page
+          if (pathname === '/login' || pathname === '/register') {
+            // Potentially show an error toast, but don't auto-redirect here
+            // as the error might be during role fetching, not auth itself
+          } else {
+             router.replace('/login'); // Fallback to login if major error during role processing
+          }
         } finally {
-            setIsLoadingAuth(false);
+          setIsLoadingAuth(false);
         }
       } else { 
         setCurrentUser(null);
-        setUserRole(null);
+setUserRole(null);
         setIsGlobalAdminTutor(false);
         setIsLoadingAuth(false);
         const protectedPaths = ['/dashboard', '/tutor-dashboard', '/mathematics', '/physics', '/book-session'];
-        if (protectedPaths.some(p => pathname.startsWith(p)) && pathname !== '/login' && pathname !== '/register' && pathname !== '/') {
-             router.replace('/login');
+        const isProtectedPath = protectedPaths.some(p => pathname.startsWith(p));
+        if (isProtectedPath && pathname !== '/login' && pathname !== '/register' && pathname !== '/') {
+          router.replace('/login');
         }
       }
     });
     return () => unsubscribe();
-  }, [router, pathname]);
+  }, [router, pathname, toast]); // Added toast to dependency array
 
   const loginUser = async (email: string, pass: string) => {
     setIsLoadingAuth(true);
@@ -164,7 +174,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-        setIsLoadingAuth(false);
+      setIsLoadingAuth(false);
     }
   };
 

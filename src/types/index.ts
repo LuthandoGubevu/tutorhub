@@ -1,11 +1,12 @@
 
 import type { LucideProps } from 'lucide-react';
+import type { Timestamp } from 'firebase/firestore';
 
 export interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
-  role: 'student' | 'tutor' | null; 
+  role: 'student' | 'tutor' | null;
 }
 
 export interface Lesson {
@@ -23,36 +24,49 @@ export interface Branch {
   title: string;
   description: string;
   lessons: Lesson[];
-  icon?: React.ComponentType<LucideProps>; // Changed type here
+  icon?: React.ComponentType<LucideProps>;
 }
 
-export interface StudentAnswer {
-  lessonId: string;
-  studentId: string;
-  answer: string;
-  studentReasoning?: string; 
-  timestamp: string;
-}
-
+// This type is for client-side representation, after fetching from Firestore and combining with full lesson data
 export interface SubmittedWork {
-  id: string;
-  lesson: Lesson;
-  studentId: string; 
+  id: string; // Firestore document ID
+  lesson: Lesson; // Full lesson object, reconstructed on client
+  studentId: string;
   studentAnswer: string;
-  studentReasoning?: string; 
-  submittedAt: string;
+  studentReasoning?: string;
+  submittedAt: string; // ISO string date
   aiFeedbackSuggestion?: string;
   tutorFeedback?: string;
   status: 'Pending' | 'Reviewed';
-  score?: number; 
+  score?: number;
+  // Fields stored directly in Firestore for easier querying/denormalization
+  lessonId: string;
+  lessonTitle: string;
+  lessonSubject: 'Mathematics' | 'Physics';
 }
+
+// This represents the structure in Firestore
+export interface SubmittedWorkFirestoreData {
+  studentId: string;
+  studentAnswer: string;
+  studentReasoning?: string;
+  submittedAt: Timestamp; // Firestore Timestamp
+  aiFeedbackSuggestion?: string;
+  tutorFeedback?: string;
+  status: 'Pending' | 'Reviewed';
+  score?: number;
+  lessonId: string;
+  lessonTitle: string;
+  lessonSubject: 'Mathematics' | 'Physics';
+}
+
 
 export interface Booking {
   id:string;
   studentId: string;
-  tutorId: string; 
+  tutorId: string;
   subject: 'Mathematics' | 'Physics' | 'General';
-  dateTime: Date;
+  dateTime: Date; // Keep as Date for client, Firestore handles conversion
   durationMinutes: number;
   googleMeetLink?: string;
   status: 'Pending' | 'Confirmed' | 'Cancelled';
@@ -60,13 +74,13 @@ export interface Booking {
 
 export interface LessonFeedback {
   lessonId: string;
-  studentId: string; 
+  studentId: string;
   rating: number;
   comments: string;
-  timestamp: string;
+  timestamp: string; // ISO string date
 }
 
 export interface TutorAvailability {
   date: Date;
-  timeSlots: string[]; 
+  timeSlots: string[];
 }

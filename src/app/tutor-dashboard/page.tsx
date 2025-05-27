@@ -1,40 +1,81 @@
 
 "use client";
 
-import { useStudentData } from '@/contexts/StudentDataContext';
-import type { SubmittedWork, Lesson } from '@/types';
+import type { SubmittedWork, SubmittedWorkFirestoreData, Lesson } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import { Eye, ListChecks, BookOpen, CheckCircle, Users, Sigma, Atom, Percent, Filter } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react'; // Added useEffect
+import { Eye, ListChecks, BookOpen, CheckCircle, Users, Sigma, Atom, Percent, Filter, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
 import MetricCard from '@/components/tutor/MetricCard';
 import SubmissionsOverTimeChart from '@/components/tutor/SubmissionsOverTimeChart';
 import SubjectBreakdownChart from '@/components/tutor/SubjectBreakdownChart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label'; // Ensure Label is imported
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { getLessonById } from '@/lib/data';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function TutorDashboardPage() {
-  const { submittedWork } = useStudentData(); // This comes from localStorage
+  const [allSubmissions, setAllSubmissions] = useState<SubmittedWork[]>([]);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(true);
   const [filterSubject, setFilterSubject] = useState<'All' | 'Mathematics' | 'Physics'>('All');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Reviewed'>('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const { isGlobalAdminTutor, currentUser } = useAuth();
+
 
   useEffect(() => {
-    console.log("[TutorDashboardPage] Received submittedWork from context:", submittedWork);
-  }, [submittedWork]);
+    // Only fetch if user is a tutor (basic check, AuthContext layout handles stricter access)
+    if (currentUser?.role === 'tutor') {
+      setIsLoadingSubmissions(true);
+      // For now, all tutors see all submissions.
+      // If isGlobalAdminTutor or other role distinctions are needed for fetching,
+      // the query could be adjusted here.
+      const q = query(collection(db, "submittedWork"), orderBy("submittedAt", "desc"));
 
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const work: SubmittedWork[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data() as SubmittedWorkFirestoreData;
+          const lessonDetail = getLessonById(data.lessonSubject, data.lessonId);
+          if (lessonDetail) {
+            work.push({
+              id: doc.id,
+              ...data,
+              lesson: lessonDetail,
+              submittedAt: (data.submittedAt as Timestamp).toDate().toISOString(),
+            });
+          } else {
+            // Handle case where lesson might have been deleted or ID is incorrect
+            // For now, we'll log and potentially skip this submission from display
+            console.warn(`Lesson with ID ${data.lessonId} and subject ${data.lessonSubject} not found for submission ${doc.id}`);
+          }
+        });
+        setAllSubmissions(work);
+        setIsLoadingSubmissions(false);
+      }, (error) => {
+        console.error("Error fetching submissions for tutor:", error);
+        setIsLoadingSubmissions(false);
+        // Potentially show a toast error
+      });
+
+      return () => unsubscribe();
+    }
+  }, [currentUser?.role, isGlobalAdminTutor]); // Depend on role or admin status if query changes
 
   const metrics = useMemo(() => {
-    const totalSubmissions = submittedWork.length;
-    const pendingReviews = submittedWork.filter(s => s.status === 'Pending').length;
-    const reviewedSubmissions = submittedWork.filter(s => s.status === 'Reviewed').length;
-    const activeStudents = new Set(submittedWork.map(s => s.studentId)).size;
+    const totalSubmissions = allSubmissions.length;
+    const pendingReviews = allSubmissions.filter(s => s.status === 'Pending').length;
+    const reviewedSubmissions = allSubmissions.filter(s => s.status === 'Reviewed').length;
+    const activeStudents = new Set(allSubmissions.map(s => s.studentId)).size;
 
-    const mathScores = submittedWork.filter(s => s.lesson.subject === 'Mathematics' && typeof s.score === 'number').map(s => s.score as number);
-    const physicsScores = submittedWork.filter(s => s.lesson.subject === 'Physics' && typeof s.score === 'number').map(s => s.score as number);
+    const mathScores = allSubmissions.filter(s => s.lesson.subject === 'Mathematics' && typeof s.score === 'number').map(s => s.score as number);
+    const physicsScores = allSubmissions.filter(s => s.lesson.subject === 'Physics' && typeof s.score === 'number').map(s => s.score as number);
 
     const avgMathScore = mathScores.length > 0 ? (mathScores.reduce((a, b) => a + b, 0) / mathScores.length).toFixed(1) + '%' : 'N/A';
     const avgPhysicsScore = physicsScores.length > 0 ? (physicsScores.reduce((a, b) => a + b, 0) / physicsScores.length).toFixed(1) + '%' : 'N/A';
@@ -47,20 +88,20 @@ export default function TutorDashboardPage() {
       avgMathScore,
       avgPhysicsScore,
     };
-  }, [submittedWork]);
+  }, [allSubmissions]);
 
   const filteredSubmissions = useMemo(() => {
-    return submittedWork // This is the data from localStorage
+    return allSubmissions
       .filter(submission => {
         const subjectMatch = filterSubject === 'All' || submission.lesson.subject === filterSubject;
         const statusMatch = filterStatus === 'All' || submission.status === filterStatus;
         const searchTermMatch = searchTerm === '' || 
-                                (submission.lesson.title && submission.lesson.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                                (submission.lessonTitle && submission.lessonTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
                                 (submission.studentId && submission.studentId.toLowerCase().includes(searchTerm.toLowerCase()));
         return subjectMatch && statusMatch && searchTermMatch;
-      })
-      .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-  }, [submittedWork, filterSubject, filterStatus, searchTerm]);
+      });
+      // Sorting is handled by Firestore query (orderBy submittedAt desc)
+  }, [allSubmissions, filterSubject, filterStatus, searchTerm]);
 
 
   return (
@@ -74,23 +115,20 @@ export default function TutorDashboardPage() {
         </CardHeader>
       </Card>
 
-      {/* Metrics Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <MetricCard title="Total Submissions" value={metrics.totalSubmissions} icon={<BookOpen size={20}/>} />
-        <MetricCard title="Pending Reviews" value={metrics.pendingReviews} icon={<CheckCircle size={20} className="text-orange-500"/>} />
-        <MetricCard title="Reviewed Submissions" value={metrics.reviewedSubmissions} icon={<CheckCircle size={20} className="text-green-500"/>} />
-        <MetricCard title="Active Students" value={metrics.activeStudents} icon={<Users size={20}/>} />
-        <MetricCard title="Avg. Math Score" value={metrics.avgMathScore} icon={<Sigma size={20}/>} />
-        <MetricCard title="Avg. Physics Score" value={metrics.avgPhysicsScore} icon={<Atom size={20}/>} />
+        <MetricCard title="Total Submissions" value={isLoadingSubmissions ? '...' : metrics.totalSubmissions} icon={<BookOpen size={20}/>} />
+        <MetricCard title="Pending Reviews" value={isLoadingSubmissions ? '...' : metrics.pendingReviews} icon={<CheckCircle size={20} className="text-orange-500"/>} />
+        <MetricCard title="Reviewed Submissions" value={isLoadingSubmissions ? '...' : metrics.reviewedSubmissions} icon={<CheckCircle size={20} className="text-green-500"/>} />
+        <MetricCard title="Active Students" value={isLoadingSubmissions ? '...' : metrics.activeStudents} icon={<Users size={20}/>} />
+        <MetricCard title="Avg. Math Score" value={isLoadingSubmissions ? '...' : metrics.avgMathScore} icon={<Sigma size={20}/>} />
+        <MetricCard title="Avg. Physics Score" value={isLoadingSubmissions ? '...' : metrics.avgPhysicsScore} icon={<Atom size={20}/>} />
       </div>
 
-      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SubmissionsOverTimeChart submissions={submittedWork} />
-        <SubjectBreakdownChart submissions={submittedWork} />
+        <SubmissionsOverTimeChart submissions={allSubmissions} />
+        <SubjectBreakdownChart submissions={allSubmissions} />
       </div>
       
-      {/* Submissions List & Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Student Submissions</CardTitle>
@@ -103,7 +141,7 @@ export default function TutorDashboardPage() {
               <Input 
                 id="search-submissions"
                 type="text" 
-                placeholder="Search by lesson or student ID..." 
+                placeholder="Search by lesson title or student ID..." 
                 value={searchTerm} 
                 onChange={(e) => setSearchTerm(e.target.value)} 
                 className="w-full"
@@ -137,17 +175,22 @@ export default function TutorDashboardPage() {
             </div>
           </div>
 
-          {filteredSubmissions.length === 0 ? (
+          {isLoadingSubmissions ? (
+            <div className="flex justify-center items-center h-60">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="ml-3 text-lg">Loading submissions...</p>
+            </div>
+          ) : filteredSubmissions.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No submissions match your current filters, or no submissions yet.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredSubmissions.map((submission: SubmittedWork) => (
                 <Card key={submission.id} className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
                   <CardHeader>
-                    <CardTitle className="text-xl">{submission.lesson?.title || 'Lesson Title Missing'}</CardTitle>
+                    <CardTitle className="text-xl">{submission.lessonTitle || 'Lesson Title Missing'}</CardTitle>
                     <CardDescription>
                       Student ID: {submission.studentId} <br />
-                      Subject: {submission.lesson?.subject || 'N/A'} <br/>
+                      Subject: {submission.lessonSubject || 'N/A'} <br/>
                       Submitted: {format(parseISO(submission.submittedAt), "MMM d, yyyy 'at' HH:mm")}
                     </CardDescription>
                   </CardHeader>
@@ -182,12 +225,3 @@ export default function TutorDashboardPage() {
     </div>
   );
 }
-
-// Helper Label component if not using ShadCN one globally in forms for this context
-// Ensure Label is imported from '@/components/ui/label' or defined if needed locally
-// For example:
-// import { Label } from "@/components/ui/label";
-// OR if not imported:
-const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ className, ...props }) => (
-  <label className={`block text-sm font-medium text-foreground mb-1 ${className}`} {...props} />
-);

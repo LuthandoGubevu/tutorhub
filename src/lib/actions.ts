@@ -2,59 +2,56 @@
 "use server";
 
 import { suggestFeedback, type SuggestFeedbackInput, type SuggestFeedbackOutput } from '@/ai/flows/suggest-feedback';
-import type { StudentAnswer, LessonFeedback, Booking, Lesson, SubmittedWork } from '@/types';
+import type { LessonFeedback, SubmittedWork, SubmittedWorkFirestoreData, Lesson } from '@/types';
 import { getLessonById } from './data';
+import { db } from './firebase'; // Import Firestore instance
+import { collection, addDoc, doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 /*
-Recommended Firestore Security Rules:
-(Apply these in your Firebase Console -> Firestore Database -> Rules)
+Firestore Security Rules (Apply in Firebase Console -> Firestore Database -> Rules):
 
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users Collection:
-    // - Allow users to read and update their own document.
-    // - Allow users to create their own document (e.g., on registration).
-    // - Tutors can potentially read all user profiles if needed for display names etc.
+    // Users Collection
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || 
-                    (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
-      allow create, update: if request.auth.uid == userId;
-      allow delete: if false; // Deny delete unless specific admin role is implemented
+      allow read, write: if request.auth.uid == userId;
+      // Allow tutors to read user profiles for display names if needed (e.g. on tutor dashboard)
+      // allow read: if request.auth.uid == userId || (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
     }
 
-    // Submissions Collection (if/when migrated from localStorage to Firestore):
-    // This rule grants global read access to the specified tutor email,
-    // and allows other tutors to read submissions if they have an 'assignedTutor' field matching their UID.
-    // Students can create submissions and only read/update their own.
-    match /submissions/{submissionId} {
+    // Submissions Collection
+    match /submittedWork/{submissionId} {
+      // Students can create their own submissions
       allow create: if request.auth.uid == request.resource.data.studentId;
+
+      // Students can read their own submissions
+      // Tutors (especially the admin tutor) can read all submissions
+      allow read: if request.auth.uid == resource.data.studentId ||
+                    (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor') ||
+                    (request.auth.token.email == "lgubevu@gmail.com"); // Specific admin tutor email
+
+      // Tutors can update submissions (e.g., for feedback, status, score)
+      allow update: if (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor') ||
+                      (request.auth.token.email == "lgubevu@gmail.com");
       
-      allow read: if (request.auth.token.email == "lgubevu@gmail.com") || // Global admin tutor
-                    (request.auth.uid == resource.data.studentId) || // Student owns the submission
-                    (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor' && resource.data.assignedTutor == request.auth.uid); // Assigned tutor
-
-      allow update: if (request.auth.token.email == "lgubevu@gmail.com") || // Global admin tutor can update
-                      (request.auth.uid == resource.data.studentId) || // Student might edit (if allowed by app logic)
-                      (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor' && resource.data.assignedTutor == request.auth.uid); // Assigned tutor can update
-
-      allow delete: if (request.auth.token.email == "lgubevu@gmail.com") || // Global admin tutor can delete
-                      (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor' && resource.data.assignedTutor == request.auth.uid); 
+      // Restrict delete, e.g., only by admin tutor or specific roles
+      // allow delete: if request.auth.token.email == "lgubevu@gmail.com";
     }
 
-    // Bookings Collection (if/when migrated from localStorage to Firestore):
+    // Bookings Collection
     match /bookings/{bookingId} {
       allow create: if request.auth.uid == request.resource.data.studentId;
       allow read, update: if request.auth.uid == resource.data.studentId ||
                            (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
-      allow delete: if (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
+      // allow delete: if (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
     }
 
-    // LessonFeedback Collection (if/when migrated from localStorage to Firestore):
+    // LessonFeedback Collection
     match /lessonFeedback/{feedbackId} {
       allow create: if request.auth.uid == request.resource.data.studentId;
       allow read: if request.auth.uid == resource.data.studentId ||
                      (request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tutor');
-      // allow update, delete: by owner or tutor as needed
     }
   }
 }
@@ -63,7 +60,7 @@ service cloud.firestore {
 
 interface SubmitAnswerResult {
   success: boolean;
-  newSubmission?: SubmittedWork;
+  submissionId?: string; // Return ID of the new Firestore document
   aiFeedbackSuggestion?: string;
   error?: string;
 }
@@ -71,9 +68,9 @@ interface SubmitAnswerResult {
 export async function submitAnswerAction(
   lessonId: string,
   answer: string,
-  reasoning: string, 
+  reasoning: string,
   subject: 'Mathematics' | 'Physics',
-  studentId: string 
+  studentId: string
 ): Promise<SubmitAnswerResult> {
   if (!answer.trim()) {
     return { success: false, error: "Answer cannot be empty." };
@@ -86,105 +83,134 @@ export async function submitAnswerAction(
   if (!lesson) {
     return { success: false, error: "Lesson not found." };
   }
-  
-  const timestamp = new Date().toISOString();
+
+  const currentTimestamp = new Date().toISOString(); // For AI flow, as it expects string
 
   let aiSuggestion: string | undefined;
   try {
     const aiInput: SuggestFeedbackInput = {
       lessonContent: lesson.richTextContent,
       studentAnswer: answer,
-      studentReasoning: reasoning, 
+      studentReasoning: reasoning,
       lessonId: lessonId,
-      studentId: studentId, 
-      timestamp: timestamp,
+      studentId: studentId,
+      timestamp: currentTimestamp,
     };
     const aiOutput: SuggestFeedbackOutput = await suggestFeedback(aiInput);
     aiSuggestion = aiOutput.feedbackSuggestion;
     console.log("AI Feedback Suggestion:", aiSuggestion);
   } catch (error) {
     console.error("Error getting AI feedback:", error);
+    // Decide if AI error should block submission. For now, it won't.
   }
-  
-  const newSubmissionData: SubmittedWork = {
-    id: `submission-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-    lesson: lesson,
-    studentId: studentId, 
+
+  const newSubmissionData: SubmittedWorkFirestoreData = {
+    studentId: studentId,
     studentAnswer: answer,
-    studentReasoning: reasoning, 
-    submittedAt: timestamp,
+    studentReasoning: reasoning,
+    submittedAt: serverTimestamp() as Timestamp, // Use Firestore server timestamp
     aiFeedbackSuggestion: aiSuggestion,
     status: 'Pending',
+    lessonId: lesson.id,
+    lessonTitle: lesson.title,
+    lessonSubject: lesson.subject,
     // score will be added by tutor
   };
-  
-  // In a real Firestore setup, you would write newSubmissionData to a 'submissions' collection here.
-  // e.g., await addDoc(collection(db, "submissions"), newSubmissionData);
-  // For now, it's returned to be handled by StudentDataContext (localStorage).
-  console.log("Simulating submission save (currently localStorage):", newSubmissionData);
-  
-  return { 
-    success: true, 
-    newSubmission: newSubmissionData,
-    aiFeedbackSuggestion: aiSuggestion 
-  };
+
+  try {
+    const docRef = await addDoc(collection(db, "submittedWork"), newSubmissionData);
+    console.log("Submission saved to Firestore with ID:", docRef.id);
+    return {
+      success: true,
+      submissionId: docRef.id,
+      aiFeedbackSuggestion: aiSuggestion
+    };
+  } catch (error) {
+    console.error("Error saving submission to Firestore:", error);
+    return { success: false, error: "Could not save submission to database." };
+  }
 }
 
 
 interface SubmitFeedbackResult {
   success: boolean;
-  feedback?: LessonFeedback;
+  feedbackId?: string; // If saving feedback to Firestore
   error?: string;
 }
 
-// studentId is passed from AuthContext
 export async function submitLessonFeedbackAction(
-  feedbackData: Omit<LessonFeedback, 'timestamp' | 'studentId'>, 
-  studentId: string 
+  feedbackData: Omit<LessonFeedback, 'timestamp' | 'studentId'>,
+  studentId: string
 ): Promise<SubmitFeedbackResult> {
   const timestamp = new Date().toISOString();
   const fullFeedbackData: LessonFeedback = {
     ...feedbackData, // lessonId, rating, comments
-    studentId: studentId, 
+    studentId: studentId,
     timestamp,
   };
 
-  // In a real Firestore setup, you would write fullFeedbackData to a 'lessonFeedback' collection.
-  console.log("Lesson feedback submitted (simulated, localStorage):", fullFeedbackData);
-  return { success: true, feedback: fullFeedbackData };
+  try {
+    // Example: Saving to a 'lessonFeedback' collection in Firestore
+    // const docRef = await addDoc(collection(db, "lessonFeedback"), {
+    //   ...fullFeedbackData,
+    //   submittedAt: serverTimestamp() // If using Firestore timestamp
+    // });
+    // console.log("Lesson feedback submitted to Firestore with ID:", docRef.id);
+    // return { success: true, feedbackId: docRef.id };
+
+    // For now, simulating local handling (as per original structure)
+    console.log("Lesson feedback submitted (simulated):", fullFeedbackData);
+    return { success: true };
+  } catch (error) {
+    console.error("Error submitting lesson feedback:", error);
+    return { success: false, error: "Could not submit feedback." };
+  }
 }
 
 
 interface BookSessionResult {
   success: boolean;
-  booking?: Booking;
+  bookingId?: string; // If saving to Firestore
   error?: string;
 }
 
-// studentId will be passed from AuthContext
 export async function bookSessionAction(
   bookingDetails: Omit<Booking, 'id' | 'studentId' | 'googleMeetLink' | 'status' | 'tutorId'>,
-  studentId: string 
+  studentId: string
 ): Promise<BookSessionResult> {
-  const newBooking: Booking = {
+  const newBookingData = {
     ...bookingDetails,
-    id: `booking-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-    studentId: studentId, 
+    studentId: studentId,
     tutorId: "tutor_placeholder_id", // This should ideally come from available tutor data
-    googleMeetLink: `https://meet.google.com/lookup/mock-${Math.random().toString(36).substring(7)}`, 
-    status: 'Confirmed', 
+    googleMeetLink: `https://meet.google.com/lookup/mock-${Math.random().toString(36).substring(7)}`,
+    status: 'Confirmed',
+    // For Firestore, convert dateTime to Firestore Timestamp
+    // dateTime: Timestamp.fromDate(bookingDetails.dateTime)
   };
 
-  // In a real Firestore setup, you would write newBooking to a 'bookings' collection.
-  console.log("Session booked (simulated, localStorage):", newBooking);
-  console.log("Google Meet link generated (simulated):", newBooking.googleMeetLink);
-  return { success: true, booking: newBooking };
+  try {
+    // Example: Saving to a 'bookings' collection in Firestore
+    // const docRef = await addDoc(collection(db, "bookings"), newBookingData);
+    // console.log("Session booked to Firestore with ID:", docRef.id);
+    // return { success: true, bookingId: docRef.id };
+    
+    // For now, simulating local handling for StudentDataContext
+    const clientBooking : Booking = {
+        ...newBookingData,
+        id: `booking-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        dateTime: bookingDetails.dateTime // Keep as Date for client context
+    }
+    console.log("Session booked (simulated for client context):", clientBooking);
+    return { success: true, bookingId: clientBooking.id }; // Return ID for context
+  } catch (error) {
+    console.error("Error booking session:", error);
+    return { success: false, error: "Could not book session." };
+  }
 }
 
 
 interface UpdateSubmissionResult {
   success: boolean;
-  updatedSubmission?: SubmittedWork;
   error?: string;
 }
 
@@ -192,27 +218,26 @@ export async function updateSubmissionByTutorAction(
   submissionId: string,
   tutorFeedback: string,
   newStatus: 'Reviewed' | 'Pending',
-  score: number | undefined, 
-  currentSubmissions: SubmittedWork[] // This reflects localStorage; Firestore would query and update directly
+  score: number | undefined
 ): Promise<UpdateSubmissionResult> {
-  
-  const submissionIndex = currentSubmissions.findIndex(s => s.id === submissionId);
-  if (submissionIndex === -1) {
-    return { success: false, error: "Submission not found." };
-  }
 
-  const submissionToUpdate = currentSubmissions[submissionIndex];
-  
-  const updatedSubmission: SubmittedWork = {
-    ...submissionToUpdate,
+  const submissionRef = doc(db, "submittedWork", submissionId);
+  const updates: Partial<SubmittedWorkFirestoreData> = {
     tutorFeedback: tutorFeedback,
     status: newStatus,
-    score: score, // Directly use the passed score
   };
-  
-  // In a real Firestore setup, you would update the document in the 'submissions' collection.
-  // e.g., await updateDoc(doc(db, "submissions", submissionId), { tutorFeedback, status: newStatus, score });
-  console.log("Submission updated by tutor (simulated, localStorage):", updatedSubmission);
-  return { success: true, updatedSubmission };
-}
+  if (score !== undefined) {
+    updates.score = score;
+  } else {
+    updates.score = undefined; // Or delete(scoreField) if you want to remove it
+  }
 
+  try {
+    await updateDoc(submissionRef, updates);
+    console.log("Submission updated by tutor in Firestore:", submissionId);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating submission in Firestore:", error);
+    return { success: false, error: "Could not update submission." };
+  }
+}

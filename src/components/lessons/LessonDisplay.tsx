@@ -1,17 +1,17 @@
 
 "use client";
 
-import type { Lesson, SubmittedWork } from '@/types';
+import type { Lesson, SubmittedWork, SubmittedWorkFirestoreData } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import MathInput from './MathInput';
 import FeedbackForm from './FeedbackForm';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import { useStudentData } from '@/contexts/StudentDataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { submitAnswerAction } from '@/lib/actions';
+import { getLessonById } from '@/lib/data';
 import { Loader2, Send, CheckCircle, HelpCircle } from 'lucide-react';
 import {
   AlertDialog,
@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot, Timestamp } from 'firebase/firestore';
 
 interface LessonDisplayProps {
   lesson: Lesson;
@@ -34,28 +36,59 @@ interface LessonDisplayProps {
 
 export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDisplayProps) {
   const [answer, setAnswer] = useState('');
-  const [reasoning, setReasoning] = useState(''); // Added reasoning state
+  const [reasoning, setReasoning] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addSubmittedWork, submittedWork } = useStudentData(); 
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const [currentSubmission, setCurrentSubmission] = useState<SubmittedWork | undefined>(undefined);
+  const [isLoadingSubmission, setIsLoadingSubmission] = useState(false);
 
   useEffect(() => {
-    if (initialSubmissionId) {
-      const existingSubmission = submittedWork.find(s => s.id === initialSubmissionId);
-      if (existingSubmission) {
-        setAnswer(existingSubmission.studentAnswer);
-        setReasoning(existingSubmission.studentReasoning || ''); // Load reasoning
-        setCurrentSubmission(existingSubmission);
-      }
+    if (initialSubmissionId && currentUser?.uid) {
+      setIsLoadingSubmission(true);
+      const unsub = onSnapshot(doc(db, "submittedWork", initialSubmissionId), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data() as SubmittedWorkFirestoreData;
+          // Ensure student can only view their own past submission via URL
+          if (data.studentId === currentUser.uid) {
+            const fetchedLesson = getLessonById(data.lessonSubject, data.lessonId);
+            if (fetchedLesson) {
+              setCurrentSubmission({
+                id: docSnap.id,
+                ...data,
+                lesson: fetchedLesson,
+                submittedAt: (data.submittedAt as Timestamp).toDate().toISOString(),
+              });
+              setAnswer(data.studentAnswer);
+              setReasoning(data.studentReasoning || '');
+            } else {
+               console.error("Lesson for submission not found");
+               setCurrentSubmission(undefined); // Or handle error
+            }
+          } else {
+            console.warn("Attempted to load submission not owned by current user.");
+            setCurrentSubmission(undefined);
+            // Optionally redirect or show an error
+          }
+        } else {
+          console.log("No such submission!");
+          setCurrentSubmission(undefined);
+        }
+        setIsLoadingSubmission(false);
+      }, (error) => {
+        console.error("Error fetching submission:", error);
+        setIsLoadingSubmission(false);
+        toast({ title: "Error", description: "Could not load past submission.", variant: "destructive" });
+      });
+      return () => unsub();
     } else {
-      // Reset for a new submission attempt if initialSubmissionId changes or is not present
+      // Reset for a new submission attempt
       setAnswer('');
       setReasoning('');
       setCurrentSubmission(undefined);
+      setIsLoadingSubmission(false);
     }
-  }, [initialSubmissionId, submittedWork, lesson.id]);
+  }, [initialSubmissionId, currentUser?.uid, lesson.id]); // lesson.id to reset if navigating between lessons but keeping same page structure
 
 
   const handleSubmitAnswer = async () => {
@@ -72,19 +105,45 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
       return;
     }
     setIsSubmitting(true);
-    const result = await submitAnswerAction(lesson.id, answer, reasoning, lesson.subject, currentUser.uid); // Pass reasoning
+    const result = await submitAnswerAction(lesson.id, answer, reasoning, lesson.subject, currentUser.uid);
     setIsSubmitting(false);
 
-    if (result.success && result.newSubmission) {
-      addSubmittedWork(result.newSubmission); 
-      setCurrentSubmission(result.newSubmission); 
+    if (result.success && result.submissionId) {
       toast({ title: "Answer Submitted!", description: "Your answer and reasoning have been saved. AI feedback (if any) is available." });
+      // The currentSubmission state will update via the Firestore listener if initialSubmissionId was set to this new ID,
+      // or the user can navigate to see it. For now, we just show a success message.
+      // If we want to immediately show the submitted work, we could set initialSubmissionId or navigate.
+      // For simplicity, we let the listener handle updates if the user is already viewing that submission.
+      // Or, more simply, set currentSubmission based on the result:
+      setCurrentSubmission({
+        id: result.submissionId,
+        studentId: currentUser.uid,
+        studentAnswer: answer,
+        studentReasoning: reasoning,
+        submittedAt: new Date().toISOString(), // This is client time, Firestore has server time. Listener will correct.
+        aiFeedbackSuggestion: result.aiFeedbackSuggestion,
+        status: 'Pending',
+        lesson: lesson,
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        lessonSubject: lesson.subject,
+      });
+      
     } else {
       toast({ title: "Submission Failed", description: result.error || "Could not submit your answer. Please try again.", variant: "destructive" });
     }
   };
   
   const isReadOnly = !!currentSubmission;
+
+  if (isLoadingSubmission && initialSubmissionId) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading previous submission...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -153,7 +212,7 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
           )}
         </CardContent>
         {!isReadOnly && (
-          <CardContent>
+          <CardContent> {/* Changed from CardFooter to CardContent for button placement */}
             <div className="flex justify-end space-x-3">
               {lesson.exampleSolution && (
                 <AlertDialog>
@@ -213,7 +272,7 @@ export default function LessonDisplay({ lesson, initialSubmissionId }: LessonDis
                 <p className="p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-md border border-green-300 dark:border-green-700">{currentSubmission.tutorFeedback}</p>
               </div>
             )}
-             <p className="text-sm text-muted-foreground">Status: {currentSubmission.status} {currentSubmission.score && `(Score: ${currentSubmission.score}%)`}</p>
+             <p className="text-sm text-muted-foreground">Status: {currentSubmission.status} {currentSubmission.score !== undefined && `(Score: ${currentSubmission.score}%)`}</p>
           </CardContent>
         </Card>
       )}

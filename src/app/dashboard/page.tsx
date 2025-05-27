@@ -2,28 +2,71 @@
 "use client";
 
 import AppLayout from '@/components/AppLayout';
-import { useStudentData } from '@/contexts/StudentDataContext';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { mathematicsBranches, physicsLessons } from '@/lib/data'; // Updated import
+import { mathematicsBranches, physicsLessons, getLessonById } from '@/lib/data';
 import SubjectOverviewCard from '@/components/dashboard/SubjectOverviewCard';
 import AssignmentSummaryTable from '@/components/dashboard/AssignmentSummaryTable';
 import PerformanceChart from '@/components/dashboard/PerformanceChart';
 import AlertsPanel from '@/components/dashboard/AlertsPanel';
-import { Atom, Sigma, BarChart3, LayoutGrid, AlertCircle } from 'lucide-react';
-import type { Lesson } from '@/types';
+import { Atom, Sigma, BarChart3, LayoutGrid, AlertCircle, Loader2 } from 'lucide-react';
+import type { Lesson, SubmittedWork, SubmittedWorkFirestoreData } from '@/types';
+import { useState, useEffect, useMemo } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { useStudentData } from '@/contexts/StudentDataContext'; // For bookings
 
 export default function DashboardPage() {
-  const { submittedWork, bookings } = useStudentData();
-  const { currentUser } = useAuth(); // Get currentUser
+  const { currentUser } = useAuth();
+  const { bookings } = useStudentData(); // Get bookings from context
+  const [submittedWork, setSubmittedWork] = useState<SubmittedWork[]>([]);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(true);
 
   // Consolidate all math lessons from branches
-  const allMathematicsLessons: Lesson[] = mathematicsBranches.reduce((acc, branch) => {
+  const allMathematicsLessons: Lesson[] = useMemo(() => mathematicsBranches.reduce((acc, branch) => {
     return acc.concat(branch.lessons);
-  }, [] as Lesson[]);
+  }, [] as Lesson[]), []);
 
-  const allLessons = [...allMathematicsLessons, ...physicsLessons];
+  const allLessons = useMemo(() => [...allMathematicsLessons, ...physicsLessons], [allMathematicsLessons]);
+
+  useEffect(() => {
+    if (currentUser?.uid) {
+      setIsLoadingSubmissions(true);
+      const q = query(
+        collection(db, "submittedWork"),
+        where("studentId", "==", currentUser.uid),
+        orderBy("submittedAt", "desc")
+      );
+
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const work: SubmittedWork[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data() as SubmittedWorkFirestoreData;
+          const lessonDetail = getLessonById(data.lessonSubject, data.lessonId);
+          if (lessonDetail) {
+            work.push({
+              id: doc.id,
+              ...data,
+              lesson: lessonDetail,
+              submittedAt: (data.submittedAt as Timestamp).toDate().toISOString(),
+            });
+          }
+        });
+        setSubmittedWork(work);
+        setIsLoadingSubmissions(false);
+      }, (error) => {
+        console.error("Error fetching student submissions:", error);
+        setIsLoadingSubmissions(false);
+        // Potentially show a toast error
+      });
+
+      return () => unsubscribe();
+    } else {
+      setSubmittedWork([]);
+      setIsLoadingSubmissions(false);
+    }
+  }, [currentUser?.uid]);
 
   const getSubjectData = (subject: 'Mathematics' | 'Physics') => {
     const subjectLessons = subject === 'Mathematics' ? allMathematicsLessons : physicsLessons;
@@ -45,6 +88,17 @@ export default function DashboardPage() {
     if (!displayName) return "There";
     return displayName.split(' ')[0];
   };
+  
+  if (isLoadingSubmissions && currentUser) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-4 text-lg text-foreground">Loading your dashboard...</p>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -66,7 +120,6 @@ export default function DashboardPage() {
           </CardHeader>
         </Card>
 
-        {/* Subject Overviews & Alerts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
             <SubjectOverviewCard
@@ -102,7 +155,14 @@ export default function DashboardPage() {
                 <CardDescription>Overview of all your lessons and their current status.</CardDescription>
               </CardHeader>
               <CardContent>
-                <AssignmentSummaryTable submittedWork={submittedWork} allLessons={allLessons} />
+                {isLoadingSubmissions ? (
+                    <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                         <p className="ml-2">Loading assignments...</p>
+                    </div>
+                ) : (
+                    <AssignmentSummaryTable submittedWork={submittedWork} allLessons={allLessons} />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -122,13 +182,13 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold text-foreground">Data Persistence:</span> Student progress and bookings are currently stored in your browser's local storage. This data will be lost if you clear your browser data or switch browsers.
+                      <span className="font-semibold text-foreground">Data Persistence:</span> Student progress is now stored in Firestore for persistence across devices. Bookings are currently in local storage.
                   </p>
                   <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold text-foreground">Mock Grades:</span> Performance charts display mock scores for 'Reviewed' assignments to demonstrate functionality. Actual grading by tutors is not yet implemented in this prototype.
+                      <span className="font-semibold text-foreground">Live Data:</span> Your assignment data is now fetched in real-time from Firestore.
                   </p>
                    <p className="text-sm text-muted-foreground">
-                      <span className="font-semibold text-foreground">Real-time Updates:</span> The dashboard reflects data from local storage. Real-time updates from a central database (like Firebase Firestore) would require further backend integration.
+                      <span className="font-semibold text-foreground">Mock Grades:</span> Performance charts display scores assigned by tutors.
                   </p>
               </CardContent>
             </Card>
